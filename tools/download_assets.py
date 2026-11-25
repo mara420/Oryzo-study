@@ -35,7 +35,7 @@ def poly(slug,res,maps):
                 p=ROOT/slug/(slug+"_"+key+"_"+res+"."+ext)
                 download(url,p,checksum)
                 with p.open("rb") as stream: magic=stream.read(12)
-                if ext=="jpg" and not magic.startswith(b"\\xff\\xd8\\xff"): raise ValueError("Not a JPEG")
+                if ext=="jpg" and not magic.startswith(bytes((255,216,255))): raise ValueError("Not a JPEG")
                 if ext=="hdr" and not magic.startswith((b"#?RADIANCE",b"#?RGBE")): raise ValueError("Not an HDR image")
                 break
             except Exception as e:
