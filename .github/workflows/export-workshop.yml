@@ -1,0 +1,67 @@
+name: Export workshop web assets
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/export-workshop.yml'
+      - 'tools/export_workshop_web.py'
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: workshop-web-export
+  cancel-in-progress: true
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: workshop-reference
+          run-id: 45719520519
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: reference
+      - uses: actions/download-artifact@v4
+        with:
+          name: ORYZO-production-assets
+          run-id: 45718907729
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: production-assets
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+      - name: Export glTF and environment
+        run: blender --background reference/workshop.blend --python-exit-code 1 --python tools/export_workshop_web.py
+      - name: Validate GLB structure
+        run: |
+          python3 - <<'PY'
+          import pathlib, struct, json
+          p=pathlib.Path('assets/workshop-v04/workshop.glb')
+          d=p.read_bytes()
+          magic,version,size,n,typ=struct.unpack_from('<4sIIII',d)
+          assert magic==b'glTF' and version==2 and size==len(d) and typ==0x4e4f534a
+          j=json.loads(d[20:20+n])
+          assert any(x.get('name')=='CoasterProduct' for x in j['nodes'])
+          assert len(j.get('images',[]))>=4
+          assert p.stat().st_size<40_000_000
+          print('GLB valid:',len(j['nodes']),'nodes,',len(j['images']),'images')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: workshop-web-assets
+          path: assets/workshop-v04/
+          retention-days: 14
+      - name: Publish versioned licensed assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/workshop-v04/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Publish generated V0.4 workshop web assets'
+          git pull --rebase origin main
+          git push origin HEAD:main
