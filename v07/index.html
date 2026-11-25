@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ORYZO Study V0.7 — Gaussian Lab</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#181510;color:#ffedd7;font:14px Arial,Helvetica,sans-serif}canvas.webgl{position:fixed;inset:0;display:block;z-index:0;touch-action:none}header{position:fixed;z-index:3;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:24px 3.125vw;font:11px monospace;letter-spacing:.05em}header a{color:inherit;text-decoration:none}header strong{font:900 20px Arial}.hero{position:fixed;left:3.125vw;top:12vh;pointer-events:none;max-width:25vw}small{font:11px monospace;color:#f2cba2}h1{margin:12px 0;font-size:clamp(45px,6.5vw,104px);line-height:.86;letter-spacing:-.07em}p{line-height:1.45;max-width:260px;color:#ffe9d2}#controls{position:fixed;z-index:4;right:3.125vw;bottom:5vh;width:min(340px,90vw);padding:18px;background:#191612e8;border:1px solid #ffedd738;backdrop-filter:blur(16px)}.buttons{display:flex;gap:6px;margin:12px 0}button{border:1px solid #ffedd75a;padding:10px 14px;background:none;color:inherit;font:11px monospace;cursor:pointer}button[aria-pressed=true]{color:#1b140f;background:#ffedd7}button:disabled{opacity:.4;cursor:default}#info{font:11px/1.6 monospace;color:#e4b991}#status{position:fixed;z-index:5;inset:0;display:grid;place-content:center;background:#181510;font:14px monospace;text-align:center;padding:24px}#status[hidden]{display:none}#status a{color:inherit;margin:15px}#note{position:fixed;left:3.125vw;bottom:5vh;font:10px/1.5 monospace;max-width:250px;pointer-events:none;color:#edd8bf}@media(max-width:650px){header{padding:16px 5vw}.hero{top:10vh;left:5vw;max-width:90vw}.hero h1{font-size:13vw}.hero p{font-size:12px;max-width:220px}#controls{right:5vw;bottom:4vh}#note{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/","@sparkjsdev/spark":"https://sparkjs.dev/releases/spark/2.4.0/spark.module.js"}}</script></head>
+<body><header><strong>COASTER / R&D</strong><span>V0.7 — HYBRID RENDERING</span><a href="../v06/">V0.6 ↗</a></header>
+<div class="hero"><small>EXPERIMENT 07 / REAL-TIME 3D</small><h1>Beyond<br>the mesh.</h1><p>Porovnej stejný model vykreslený pomocí polygonů a prostorových Gaussian Splatů. Tažením myši otáčej kamerou.</p></div>
+<div id="controls"><small>RENDER MODE</small><div class="buttons"><button id="mesh" aria-pressed="true">MESH</button><button id="splat" disabled aria-pressed="false">HYBRID</button><button id="reset">RESET</button></div><div id="info" role="status">Načítám 3D prostředí…</div><p style="font-size:11px;margin-bottom:0">Experimentální splaty vzorkované z geometrie a materiálu, nikoliv fotogrammetrický sken ani trénovaný 3DGS model.</p></div>
+<div id="note">INDEPENDENT STUDY / LUSION OBJ (MIT)<br>SCROLL / ZOOM · DRAG / ORBIT</div>
+<div id="status"><div id="message">Loading workshop…</div><a href="../v06/">Zpět na V0.6</a></div>
+<script>addEventListener('error',()=>{const e=document.querySelector('#status');if(!e.hidden)document.querySelector('#message').textContent='Nelze inicializovat WebGL. Zkus V0.6.'});</script>
+<script type="module">
+import * as T from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const $=s=>document.querySelector(s), info=$('#info');
+const mobile=innerWidth<650;
+try{
+const renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.domElement.className='webgl';document.body.prepend(renderer.domElement);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+const scene=new T.Scene();scene.background=new T.Color('#211a13');const camera=new T.PerspectiveCamera(40,innerWidth/innerHeight,.05,150);camera.position.set(mobile?5:8,mobile?30:22,mobile?20:19);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.8,0);controls.enableDamping=true;controls.minDistance=9;controls.maxDistance=48;controls.maxPolarAngle=Math.PI/2-.05;controls.update();controls.saveState();
+const pmrem=new T.PMREMGenerator(renderer), room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.05).texture;scene.environmentIntensity=.36;room.dispose();
+const key=new T.DirectionalLight(0xfff0db,1.8);key.position.set(-9,17,9);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:.5,far:60});key.shadow.normalBias=.025;scene.add(key,new T.HemisphereLight(0xffeddb,0x514a3c,.45));
+const root='../assets/workshop-v04/';const gltf=await new GLTFLoader().loadAsync(root+'workshop.glb');const desk=gltf.scene;scene.add(desk);desk.updateMatrixWorld(true);const product=desk.getObjectByName('CoasterProduct');if(!product)throw Error('Chybí model podtácku');
+const meshes=[];product.traverse(o=>{if(o.isMesh)meshes.push(o)});if(!meshes.length)throw Error('Prázdný model');
+desk.traverse(o=>{if(o.isMesh){o.receiveShadow=true;o.castShadow=!/Grid|Wooden work surface/.test(o.name)}});
+new RGBELoader().loadAsync(root+'studio.hdr').then(h=>{const old=scene.environment;scene.environment=pmrem.fromEquirectangular(h).texture;old.dispose();h.dispose();pmrem.dispose()}).catch(()=>pmrem.dispose());
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}resize();addEventListener('resize',resize);
+let mode='mesh',gaussian=null,spark=null,ready=false,total=0;function select(next){if(next==='splat'&&!ready)return;mode=next;product.visible=mode==='mesh';if(gaussian)gaussian.visible=mode==='splat';$('#mesh').setAttribute('aria-pressed',String(mode==='mesh'));$('#splat').setAttribute('aria-pressed',String(mode==='splat'));info.textContent=(mode==='mesh'?'Klasický polygonový model':'Hybrid: Gaussian podtácek + polygonové prostředí')+(ready?' · '+total.toLocaleString('cs-CZ')+' splatů':' · experiment se načítá');}
+$('#mesh').onclick=()=>select('mesh');$('#splat').onclick=()=>select('splat');$('#reset').onclick=()=>controls.reset();
+window.study={version:'0.7',renderer,scene,camera,product,get ready(){return ready},get mode(){return mode},get numSplats(){return total}};
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});$('#status').hidden=true;select('mesh');
+// Optional renderer imported only after the mesh scene is usable.
+try{
+ const {SparkRenderer,SplatMesh}=await import('@sparkjsdev/spark');
+ const triangles=[],a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3(),n=new T.Vector3(),e1=new T.Vector3(),e2=new T.Vector3();
+ const texCache=new Map();function textureData(mat){const map=mat?.map;if(!map?.image)return null;if(texCache.has(map))return texCache.get(map);const im=map.image,w=im.width,h=im.height;if(!w||!h)return null;const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);const data={w,h,p:ctx.getImageData(0,0,w,h).data,map};texCache.set(map,data);return data}
+ let area=0;for(const mesh of meshes){const g=mesh.geometry,position=g.attributes.position,uv=g.attributes.uv,index=g.index,mat=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;const tex=textureData(mat);const count=index?index.count:position.count;for(let i=0;i+2<count;i+=3){const ids=[0,1,2].map(k=>index?index.getX(i+k):i+k);a.fromBufferAttribute(position,ids[0]).applyMatrix4(mesh.matrixWorld);b.fromBufferAttribute(position,ids[1]).applyMatrix4(mesh.matrixWorld);c.fromBufferAttribute(position,ids[2]).applyMatrix4(mesh.matrixWorld);n.crossVectors(e1.subVectors(b,a),e2.subVectors(c,a));const ar=n.length()*.5;if(ar<1e-8)continue;area+=ar;triangles.push({a:a.clone(),b:b.clone(),c:c.clone(),normal:n.normalize().clone(),uv:uv?ids.map(id=>new T.Vector2().fromBufferAttribute(uv,id)):null,tex,mat,end:area});}}
+ if(!triangles.length)throw Error('No surface triangles');
+ let seed=98765;function rnd(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
+ function choose(x){let l=0,h=triangles.length-1;while(l<h){let m=(l+h)>>1;if(triangles[m].end<x)l=m+1;else h=m}return triangles[l]}
+ const count=mobile?28000:60000,spacing=Math.sqrt(area/count),center=new T.Vector3(),scale=new T.Vector3(spacing*.77,spacing*.77,spacing*.12),quat=new T.Quaternion(),axis=new T.Vector3(0,0,1),color=new T.Color(),coord=new T.Vector2(),keyDirection=new T.Vector3(-.35,.85,.35).normalize();
+ spark=new SparkRenderer({renderer});scene.add(spark);
+ gaussian=new SplatMesh({maxSplats:count,constructSplats:packed=>{
+ for(let i=0;i<count;i++){const tr=choose(rnd()*area),r=Math.sqrt(rnd()),s=rnd(),wa=1-r,wb=r*(1-s),wc=r*s;center.copy(tr.a).multiplyScalar(wa).addScaledVector(tr.b,wb).addScaledVector(tr.c,wc);quat.setFromUnitVectors(axis,tr.normal);
+ const shade=.69+.29*Math.max(0,tr.normal.dot(keyDirection));const base=tr.mat?.color||new T.Color('#a96e40');
+ if(tr.tex&&tr.uv){coord.copy(tr.uv[0]).multiplyScalar(wa).addScaledVector(tr.uv[1],wb).addScaledVector(tr.uv[2],wc);tr.tex.map.transformUv(coord);const x=Math.min(tr.tex.w-1,Math.max(0,Math.floor(coord.x*tr.tex.w))),y=Math.min(tr.tex.h-1,Math.max(0,Math.floor(coord.y*tr.tex.h))),j=(y*tr.tex.w+x)*4;const p=tr.tex.p;const lum=(.2126*p[j]+.7152*p[j+1]+.0722*p[j+2])/255;const variation=.68+.48*lum;color.setRGB(.67*variation*shade,.44*variation*shade,.26*variation*shade,T.LinearSRGBColorSpace);}
+ else color.copy(base).convertLinearToSRGB().multiplyScalar(shade);
+ packed.pushSplat(center,scale,quat,.88,color);
+ }
+ }});
+ gaussian.visible=false;scene.add(gaussian);await gaussian.initialized;total=gaussian.numSplats;if(!total)throw Error('Empty Gaussian model');ready=true;$('#splat').disabled=false;select('mesh');
+ }catch(e){if(gaussian){gaussian.visible=false;scene.remove(gaussian)}if(spark)scene.remove(spark);info.textContent='Mesh režim funguje. Gaussian experiment nelze inicializovat: '+e.message;console.warn(e);}
+}catch(e){$('#message').textContent='Chyba inicializace: '+e.message;console.error(e)}
+</script></body></html>
