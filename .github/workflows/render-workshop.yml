@@ -1,0 +1,38 @@
+name: Render workshop reference
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/render-workshop.yml'
+      - 'tools/build_workshop.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ORYZO-production-assets
+          run-id: 45718907729
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: production-assets
+      - name: Locate downloaded textures
+        run: find production-assets -type f | sort
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --background --version
+      - name: Build scene and render reference image
+        run: blender --background --python-exit-code 1 --python tools/build_workshop.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workshop-reference
+          path: renders/
+          if-no-files-found: warn
+          retention-days: 14
