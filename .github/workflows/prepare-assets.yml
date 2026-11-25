@@ -1,0 +1,33 @@
+name: Prepare licensed 3D assets
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/prepare-assets.yml'
+      - 'tools/download_assets.py'
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch CC0 materials from official providers
+        run: python3 tools/download_assets.py
+      - name: Install Blender for headless scene work
+        if: always()
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --background --version | tee blender-version.txt
+      - name: Publish downloadable materials and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ORYZO-production-assets
+          path: |
+            production-assets/
+            blender-version.txt
+          if-no-files-found: warn
+          retention-days: 14
