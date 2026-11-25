@@ -16,11 +16,41 @@ def download(url,p,md5=None):
     return len(data)
 def poly(slug,res,maps):
     info=get_json("https://api.polyhaven.com/files/"+slug)
+    if isinstance(info.get("files"),dict): info=info["files"]
+    print("Poly Haven keys:",slug,list(info),flush=True)
+    aliases={"diff":("diff","diffuse","albedo","basecolor","base_color"),"nor_gl":("nor_gl","normal_gl","normalgl"),"rough":("rough","roughness"),"disp":("disp","displacement","height"),"hdri":("hdri",)}
+    normalized={k.lower().replace(" ","_").replace("-","_"):v for k,v in info.items()}
     for key,ext in maps:
-        entry=info[key][res][ext]
-        url=entry["url"]
-        p=ROOT/slug/pathlib.Path(urllib.parse.unquote(urllib.parse.urlparse(url).path)).name
-        download(url,p,entry.get("md5"))
+        choices=[]
+        for alias in aliases.get(key,(key,)):
+            value=normalized.get(alias,{})
+            entry=value.get(res,{}).get(ext,{}) if isinstance(value,dict) else {}
+            if isinstance(entry,dict) and entry.get("url"): choices.append((entry["url"],entry.get("md5")))
+        # Official CDN paths are an independent fallback if an API key changes.
+        if ext=="jpg":
+            choices.append(("https://dl.polyhaven.org/file/ph-assets/Textures/jpg/"+res+"/"+slug+"/"+slug+"_"+key+"_"+res+".jpg",None))
+        failures=[]
+        for url,checksum in choices:
+            try:
+                p=ROOT/slug/(slug+"_"+key+"_"+res+"."+ext)
+                download(url,p,checksum)
+                with p.open("rb") as stream: magic=stream.read(12)
+                if ext=="jpg" and not magic.startswith(b"\\xff\\xd8\\xff"): raise ValueError("Not a JPEG")
+                if ext=="hdr" and not magic.startswith((b"#?RADIANCE",b"#?RGBE")): raise ValueError("Not an HDR image")
+                break
+            except Exception as e:
+                p.unlink(missing_ok=True)
+                failures.append(str(e))
+        else: raise RuntimeError(slug+" / "+key+": "+("; ".join(failures) or "No matching file in API"))
+def wood():
+    for slug in ("wood_table_001","wood_table_worn","wood_table"):
+        try:
+            poly(slug,"4k",[(k,"jpg") for k in ("diff","nor_gl","rough","disp")])
+            return
+        except Exception as e:
+            print("Wood candidate failed:",slug,e,flush=True)
+            shutil.rmtree(ROOT/slug,ignore_errors=True)
+    raise RuntimeError("No complete CC0 wood material downloaded")
 def cork():
     for slug in ("Cork001","Cork003"):
         try:
@@ -45,7 +75,7 @@ def cork():
             return
         except Exception as e: print(slug,e,flush=True)
     raise RuntimeError("No verified ambientCG cork package could be retrieved")
-tasks=[("wood",lambda:poly("wood_table_001","4k",[("diff","jpg"),("nor_gl","jpg"),("rough","jpg"),("disp","jpg")])),("HDRI",lambda:poly("studio_small_03","2k",[("hdri","hdr")])),("cork",cork)]
+tasks=[("wood",wood),("HDRI",lambda:poly("studio_small_03","2k",[("hdri","hdr")])),("cork",cork)]
 results={}
 for name,fn in tasks:
     try: fn();results[name]="OK"
