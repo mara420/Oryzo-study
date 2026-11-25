@@ -31,12 +31,18 @@ jobs:
           run-id: 45718907729
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: production-assets
-      - name: Install Blender
+      - name: Install Blender and glTF Python dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy python3-pil
+      - name: Test glTF exporter before processing workshop
+        run: |
+          blender --background --factory-startup --python-use-system-env --python-exit-code 1 --python-expr "import sys; sys.path.append('/usr/lib/python3/dist-packages'); import numpy, bpy; print('NumPy', numpy.__version__); bpy.ops.export_scene.gltf(filepath='/tmp/export-smoke.glb', export_format='GLB')"
+          test -s /tmp/export-smoke.glb
       - name: Export glTF and environment
-        run: blender --background reference/workshop.blend --python-exit-code 1 --python tools/export_workshop_web.py
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: blender --background reference/workshop.blend --python-use-system-env --python-exit-code 1 --python tools/export_workshop_web.py
       - name: Validate GLB structure
         run: |
           python3 - <<'PY'
