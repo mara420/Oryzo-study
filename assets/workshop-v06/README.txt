@@ -1,0 +1,1 @@
+Original UV0; static Cycles AO and diffuse direct+indirect illumination, without color, product or printed grid. Independent study using CC0 ambientCG and Poly Haven materials; geometry based on our workshop. Lusion OBJ MIT.
