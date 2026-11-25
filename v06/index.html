@@ -72,7 +72,7 @@ desk.traverse(o=>{if(!o.isMesh)return;const n=normalized(o.name);for(const m of 
 let bakeAvailable=false,bakeOn=false,hdrReady=false;
 const bakeButton=$('#lightctl');
 function diagnostics(){ $('#diagnostics').textContent='V0.6 / GLB + '+(hdrReady?'HDRI':'STUDIO')+' / '+(bakeOn?'BAKED LIGHT':bakeAvailable?'BAKE OFF':'LIVE LIGHT'); }
-function applyBake(on){bakeOn=on&&bakeAvailable;for(const ms of Object.values(bakedMaterials))for(const m of ms){m.aoMapIntensity=bakeOn?.83:0;m.lightMapIntensity=bakeOn?.22:0;}bakeButton.textContent=bakeOn?'BAKE ON':'BAKE OFF';bakeButton.setAttribute('aria-pressed',String(bakeOn));diagnostics();}
+function applyBake(on){bakeOn=on&&bakeAvailable;for(const ms of Object.values(bakedMaterials))for(const m of ms){m.aoMapIntensity=bakeOn ? .83 : 0;m.lightMapIntensity=bakeOn ? .22 : 0;}bakeButton.textContent=bakeOn?'BAKE ON':'BAKE OFF';bakeButton.setAttribute('aria-pressed',String(bakeOn));diagnostics();}
 bakeButton.onclick=()=>applyBake(!bakeOn);
 async function loadBaked(){try{
 const loader=new T.TextureLoader();const jobs=[];
@@ -104,7 +104,7 @@ console.info('Graded materials',Array.from(done).map(m=>m.name),'coaster',coaste
 
 asset(new RGBELoader(),'studio.hdr').then(hdr=>{const old=scene.environment;scene.environment=pmrem.fromEquirectangular(hdr).texture;old.dispose();hdr.dispose();pmrem.dispose();hdrReady=true;diagnostics()}).catch(()=>{diagnostics();pmrem.dispose()});
 const keys=[{p:0,c:[0,35.2,2.5],t:[0,.8,0],lift:0,rot:0},{p:.14,c:[0,29,2],t:[0,1,0],lift:0,rot:0},{p:.34,c:[0,25,3.5],t:[0,3,0],lift:2.6,rot:0},{p:.49,c:[0,23,7],t:[0,3,0],lift:2.6,rot:.55},{p:.64,c:[-1,22,5],t:[0,3,0],lift:2.6,rot:Math.PI},{p:.76,c:[0,24,4],t:[0,3,0],lift:2.6,rot:Math.PI*2},{p:.87,c:[7,14,14],t:[0,1,0],lift:0,rot:Math.PI*2},{p:1,c:[4,7.5,10],t:[0,.9,0],lift:0,rot:Math.PI*2}];
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let p=0,mx=0,my=0;const target=new T.Vector3(),q=new T.Vector3(),v=new T.Vector3();
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let p=0,mx=0,my=0,lastFrame=performance.now();const target=new T.Vector3(),q=new T.Vector3(),v=new T.Vector3();
 let filmEnabled=!reduced&&innerWidth>650,composer=null,bokeh=null,grade=null;
 try{
  composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
@@ -116,14 +116,14 @@ function resize(){renderer.setSize(innerWidth,innerHeight);if(composer){composer
 addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
 const buttons=[...document.querySelectorAll('[data-p]')];buttons.forEach(b=>b.onclick=()=>scrollTo({top:Number(b.dataset.p)*(document.documentElement.scrollHeight-innerHeight),behavior:reduced?'auto':'smooth'}));
 function opacity(id,value){$(id).style.opacity=clamp(value,0,1)}
-function frame(){const wanted=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight),0,1);p=reduced?wanted:lerp(p,wanted,.085);let i=0;while(i<keys.length-2&&p>keys[i+1].p)i++;const a=keys[i],b=keys[i+1],t=ease(a.p,b.p,p);
+function frame(){const now=performance.now(),dt=Math.max(.001,(now-lastFrame)/1000);lastFrame=now;const wanted=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight),0,1);p=reduced?wanted:lerp(p,wanted,1-Math.exp(-dt/.16));let i=0;while(i<keys.length-2&&p>keys[i+1].p)i++;const a=keys[i],b=keys[i+1],t=ease(a.p,b.p,p);
 v.set(...a.c).lerp(q.set(...b.c),t);target.set(...a.t).lerp(q.set(...b.t),t);if(camera.aspect<.9)v.multiplyScalar(1.32);camera.position.copy(v);if(!reduced){camera.position.x+=mx*.55;camera.position.z+=my*.35}camera.lookAt(target);pivot.position.copy(base);pivot.position.y+=lerp(a.lift,b.lift,t);labActive=p>.36&&p<.72;$('#lab').hidden=!labActive;
 if(!labActive){if(thermalMode)selectThermal(false);if(flipped){flipped=false;$('#flip').setAttribute('aria-pressed','false');}}
-flipAngle=reduced?(flipped?Math.PI:0):lerp(flipAngle,flipped?Math.PI:0,.11);
+flipAngle=reduced?(flipped?Math.PI:0):lerp(flipAngle,flipped?Math.PI:0,1-Math.exp(-dt/.14));
 pivot.rotation.x=lerp(a.rot,b.rot,t)+flipAngle;
-const isolated=ease(.13,.34,p)*(1-ease(.76,.88,p));desk.position.y=-isolated*19;desk.visible=isolated<.96;fill.intensity=lerp(bakeOn?.23:.38,.30,isolated);light.intensity=lerp(1.65,2.05,isolated);rim.intensity=lerp(.15,1.0,isolated);shadow.visible=isolated<.8;sm.opacity=.74*(1-isolated);pivot.rotation.z=(reduced?0:mx*.14)*isolated;pivot.rotation.y=(reduced?0:my*.11)*isolated;
+const isolated=ease(.13,.34,p)*(1-ease(.76,.88,p));desk.position.y=-isolated*19;desk.visible=isolated<.96;fill.intensity=lerp(bakeOn ? .23 : .38,.30,isolated);light.intensity=lerp(1.65,2.05,isolated);rim.intensity=lerp(.15,1.0,isolated);shadow.visible=isolated<.8;sm.opacity=.74*(1-isolated);pivot.rotation.z=(reduced?0:mx*.14)*isolated;pivot.rotation.y=(reduced?0:my*.11)*isolated;
 pivot.updateMatrixWorld(true);thermalUniforms.uWorldToProduct.value.copy(pivot.matrixWorld).invert();
-if(filmEnabled&&composer){bokeh.uniforms.focus.value=camera.position.distanceTo(pivot.position);bokeh.uniforms.aperture.value=lerp(.00045,.0022,ease(.83,1,p));bokeh.uniforms.maxblur.value=lerp(.002,.006,ease(.83,1,p));composer.render()}else{renderer.render(scene,camera)}opacity('#intro',1-ease(.08,.21,p));opacity('#product',ease(.25,.36,p)*(1-ease(.69,.79,p)));opacity('#macro',ease(.83,.94,p));$('#bar').style.transform='translateY('+p*(86/14*100)+'%)';opacity('#scroll',1-ease(.015,.1,p));buttons.forEach((b,i)=>b.setAttribute('aria-current',String(i===(p<.25?0:p<.8?1:2))));requestAnimationFrame(frame)}
+if(filmEnabled&&composer){try{bokeh.uniforms.focus.value=camera.position.distanceTo(pivot.position);bokeh.uniforms.aperture.value=lerp(.00045,.0022,ease(.83,1,p));bokeh.uniforms.maxblur.value=lerp(.002,.006,ease(.83,1,p));composer.render()}catch(e){filmEnabled=false;updateFilm();console.warn('Film rendering failed; using live 3D',e);renderer.setRenderTarget(null);renderer.render(scene,camera)}}else{renderer.render(scene,camera)}opacity('#intro',1-ease(.08,.21,p));opacity('#product',ease(.25,.36,p)*(1-ease(.69,.79,p)));opacity('#macro',ease(.83,.94,p));$('#bar').style.transform='translateY('+p*(86/14*100)+'%)';opacity('#scroll',1-ease(.015,.1,p));buttons.forEach((b,i)=>b.setAttribute('aria-current',String(i===(p<.25?0:p<.8?1:2))));requestAnimationFrame(frame)}
 frame();$('#status').hidden=true;window.study={renderer,scene,camera,desk,pivot,coaster,composer,matGroup,cutterGroup,version:"0.6",thermalUniforms,get bakeAvailable(){return bakeAvailable},get thermalMode(){return thermalMode}};
 }catch(e){$('#msg').textContent='3D initialization failed: '+e.message+' — assets may still be exporting.';console.error(e)}
 </script></body></html>
