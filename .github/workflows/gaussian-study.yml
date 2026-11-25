@@ -1,0 +1,90 @@
+name: Gaussian study V0.7
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/gaussian-study.yml'
+      - 'v07/**'
+      - 'tools/smoke_v07.mjs'
+      - 'tools/render_splat_dataset.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: gaussian-study
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source syntax
+        run: |
+          python3 - <<'PY'
+          import pathlib,re
+          s=pathlib.Path("v07/index.html").read_text()
+          pathlib.Path("/tmp/v07.mjs").write_text(re.search(r'<script type="module">(.*?)</script>',s,re.S).group(1))
+          PY
+          node --check /tmp/v07.mjs
+          node --check tools/smoke_v07.mjs
+      - run: npm install --no-save --no-package-lock playwright@1.51.1 three@0.180.0
+      - run: npx playwright install --with-deps chromium
+      - name: Verify live WebGL Gaussian and mesh modes
+        run: |
+          python3 -m http.server 8765 > /tmp/oryzo-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8765/v07/ >/dev/null && break; sleep 1; done
+          node tools/smoke_v07.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v07-browser-checkpoints
+          path: test-output/
+          if-no-files-found: warn
+          retention-days: 14
+  dataset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: workshop-reference
+          run-id: 45719520519
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: reference
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-pil
+      - name: Render calibrated training and holdout images
+        run: blender --background reference/workshop.blend --python-exit-code 1 --python tools/render_splat_dataset.py
+      - name: Validate dataset
+        run: |
+          /usr/bin/python3 - <<'PY'
+          import json, pathlib
+          from PIL import Image
+          root=pathlib.Path('splat-dataset')
+          data=json.loads((root/'transforms.json').read_text())
+          frames=data['frames']
+          assert len(frames)==24
+          assert sum(f['split']=='eval' for f in frames)==4
+          for f in frames:
+              assert len(f['transform_matrix'])==4 and all(len(r)==4 for r in f['transform_matrix'])
+              with Image.open(root/f['file_path']) as im:
+                  im.verify()
+                  assert im.size==(640,480)
+          print('Validated 24 calibrated images')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workshop-multiview-dataset
+          path: splat-dataset/
+          if-no-files-found: warn
+          retention-days: 14
