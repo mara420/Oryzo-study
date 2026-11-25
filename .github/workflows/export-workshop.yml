@@ -43,6 +43,67 @@ jobs:
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: blender --background reference/workshop.blend --python-use-system-env --python-exit-code 1 --python tools/export_workshop_web.py
+      - name: Optimize embedded textures without changing geometry
+        run: |
+          /usr/bin/python3 - <<'PY'
+          import pathlib, struct, json, io
+          from PIL import Image
+          p=pathlib.Path('assets/workshop-v04/workshop.glb')
+          raw=p.read_bytes()
+          magic,ver,total,jlen,jtype=struct.unpack_from('<4sIIII',raw)
+          assert (magic,ver,total,jtype)==(b'glTF',2,len(raw),0x4e4f534a)
+          doc=json.loads(raw[20:20+jlen])
+          blen,btype=struct.unpack_from('<II',raw,20+jlen)
+          assert btype==0x004e4942 and len(doc['buffers'])==1
+          binary=raw[28+jlen:28+jlen+blen]
+          views=doc['bufferViews']
+          original=[binary[v.get('byteOffset',0):v.get('byteOffset',0)+v['byteLength']] for v in views]
+          assert all(v.get('buffer',0)==0 for v in views)
+          # Preserve data maps as lossless PNG; only color maps use JPEG.
+          color=set()
+          data=set()
+          def collect(info, group):
+              if isinstance(info,dict) and 'index' in info:
+                  tex=doc['textures'][info['index']]
+                  if 'source' in tex: group.add(tex['source'])
+          for mat in doc.get('materials',[]):
+              pbr=mat.get('pbrMetallicRoughness',{})
+              collect(pbr.get('baseColorTexture'),color)
+              collect(mat.get('emissiveTexture'),color)
+              collect(pbr.get('metallicRoughnessTexture'),data)
+              collect(mat.get('normalTexture'),data)
+              collect(mat.get('occlusionTexture'),data)
+          for i,img in enumerate(doc.get('images',[])):
+              assert 'bufferView' in img, 'Expected embedded image'
+              idx=img['bufferView']
+              before=len(original[idx])
+              with Image.open(io.BytesIO(original[idx])) as im:
+                  im.load()
+                  im.thumbnail((1024,1024),Image.Resampling.LANCZOS)
+                  out=io.BytesIO()
+                  if i in color and i not in data and ('A' not in im.getbands() or im.getchannel('A').getextrema()==(255,255)):
+                      im.convert('RGB').save(out,format='JPEG',quality=92,subsampling=0,optimize=True)
+                      img['mimeType']='image/jpeg'
+                  else:
+                      im.save(out,format='PNG',optimize=True)
+                      img['mimeType']='image/png'
+                  original[idx]=out.getvalue()
+                  print('Image',i,img.get('name'),im.size,before,'->',len(original[idx]))
+          # Rebuild buffer views with four-byte alignment; accessor-relative offsets stay unchanged.
+          packed=bytearray()
+          for view,chunk in zip(views,original):
+              packed.extend(b'\0'*((-len(packed))%4))
+              view['byteOffset']=len(packed)
+              view['byteLength']=len(chunk)
+              packed.extend(chunk)
+          doc['buffers'][0]['byteLength']=len(packed)
+          packed.extend(b'\0'*((-len(packed))%4))
+          js=json.dumps(doc,separators=(',',':')).encode()
+          js+=b' '*((-len(js))%4)
+          result=struct.pack('<4sII',b'glTF',2,12+8+len(js)+8+len(packed))+struct.pack('<II',len(js),0x4e4f534a)+js+struct.pack('<II',len(packed),0x004e4942)+packed
+          p.write_bytes(result)
+          print('Optimized GLB:',len(raw),'->',len(result),'bytes')
+          PY
       - name: Validate GLB structure
         run: |
           python3 - <<'PY'
@@ -54,7 +115,7 @@ jobs:
           j=json.loads(d[20:20+n])
           assert any(x.get('name')=='CoasterProduct' for x in j['nodes'])
           assert len(j.get('images',[]))>=4
-          assert p.stat().st_size<40_000_000
+          assert p.stat().st_size<40_000_000, f'GLB exceeds web budget: {p.stat().st_size} bytes'
           print('GLB valid:',len(j['nodes']),'nodes,',len(j['images']),'images')
           PY
       - uses: actions/upload-artifact@v4
