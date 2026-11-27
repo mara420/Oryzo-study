@@ -55,7 +55,7 @@ let photoReady=false,photoOn=true,photoActive=false,plateType='';
 function loadPlate(){
  const type=innerWidth/innerHeight<.9?'mobile':'desktop';
  if(plateType===type)return;
- plateType=type;photoReady=false;photoBtn.disabled=true;
+ plateType=type;photoReady=false;photoBtn.disabled=true;plate.classList.remove('on');
  const image=new Image();image.onload=()=>{if(plateType!==type)return;plate.src=image.src;photoReady=true;photoBtn.disabled=false;};
  image.onerror=()=>{if(plateType!==type)return;photoReady=false;photoBtn.disabled=true;console.warn('Photographic environment unavailable; using fully live scene');};
  image.src='../assets/hero-v11/'+type+'-plate.jpg';
@@ -157,6 +157,27 @@ desk.traverse(o=>{if(!o.isMesh)return;
  }});
 const coasterMats=new Set();
 coaster.traverse(o=>{if(!o.isMesh)return;o.castShadow=true;o.receiveShadow=true;for(const m of materials(o)){if(coasterMats.has(m))continue;coasterMats.add(m);m.map=gradeTexture(m.map,[151,104,61],1.02);m.color.set('#ffffff');m.roughness=.99;m.envMapIntensity=.12;if(m.normalScale)m.normalScale.set(.88,.88);m.needsUpdate=true;}});
+// Keep the original UV transforms, but replace the 1K GLB maps with licensed 2K files.
+let macroReady=false;
+async function loadMacroMaps(){
+ try{
+  const loader=new T.TextureLoader(),root='../assets/hero-v11/';
+  const [color,normal,rough]=await Promise.all(['cork-color.jpg','cork-normal.jpg','cork-rough.jpg'].map(n=>loader.loadAsync(root+n)));
+  function inherit(old,source,isColor){
+   const t=old?old.clone():source.clone();
+   t.source=new T.Source(source.image);t.flipY=false;t.colorSpace=isColor?T.SRGBColorSpace:T.NoColorSpace;
+   t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;return t;
+  }
+  for(const m of coasterMats){
+   m.map=gradeTexture(inherit(m.map,color,true),[151,104,61],1.02);
+   m.normalMap=inherit(m.normalMap||m.map,normal,false);
+   m.roughnessMap=inherit(m.roughnessMap||m.map,rough,false);
+   m.roughness=.94;m.needsUpdate=true;
+  }
+  macroReady=true;
+ }catch(e){console.warn('High resolution maps unavailable; keeping GLB material',e);}
+}
+loadMacroMaps();
 function groupObjects(nodes,name){if(!nodes.length)return null;const g=new T.Group();g.name=name;desk.add(g);const bounds=new T.Box3();for(const o of nodes)bounds.expandByObject(o);g.position.copy(desk.worldToLocal(bounds.getCenter(new T.Vector3())));g.updateMatrixWorld(true);for(const o of nodes)g.attach(o);return g;}
 const matGroup=groupObjects(matNodes,'Mat composition');
 const cutterGroup=groupObjects(cutterNodes,'Cutter composition'); // original static positions retained to align lightmaps.
@@ -224,7 +245,7 @@ if(handReady){const approach=ease(.34,.43,story);handRoot.position.set(lerp(13,8
 pivot.position.x=base.x+handWeight*.45;pivot.rotation.y+=(reduced?0:mx*.09)*handWeight;
 // A camera-matched Cycles plate is only used for the opening; the coaster is always live.
 const activePhoto=photoReady&&photoOn&&story<.105;
-photoActive=activePhoto;plate.classList.toggle('on',activePhoto);
+if(photoActive!==activePhoto){photoActive=activePhoto;plate.classList.toggle('on',activePhoto);}
 const curtain=photoReady&&photoOn?ease(.067,.105,story)*(1-ease(.105,.158,story)):0;
 $('#cut').style.opacity=curtain*.99;
 const heroAspect=plateType==='mobile'?9/16:16/9;
@@ -238,6 +259,6 @@ if(activePhoto){
 }else{scene.background=darkBackground;renderer.setClearColor(darkBackground,1);}
 pivot.updateMatrixWorld(true);thermalUniforms.uWorldToProduct.value.copy(pivot.matrixWorld).invert();
 if(activePhoto){renderer.setRenderTarget(null);renderer.render(scene,camera)}else if(filmEnabled&&composer){try{bokeh.uniforms.focus.value=camera.position.distanceTo(pivot.position);bokeh.uniforms.aperture.value=lerp(.00045,.0022,ease(.83,1,p));bokeh.uniforms.maxblur.value=lerp(.002,.006,ease(.83,1,p));composer.render()}catch(e){filmEnabled=false;updateFilm();console.warn('Film rendering failed; using live 3D',e);renderer.setRenderTarget(null);renderer.render(scene,camera)}}else{renderer.render(scene,camera)}opacity('#intro',1-ease(.065,.105,story));opacity('#product',ease(.145,.18,story)*(1-ease(.30,.35,story)));opacity('#handchapter',handReady?handWeight:0);opacity('#macro',ease(.56,.62,story)*(1-ease(.74,.79,story)));opacity('#ritual',ease(.83,.91,story));$('#ritual').classList.toggle('active',finale>.95);$('#bar').style.transform='translateY('+story*(86/14*100)+'%)';const chapter=story<.12?1:story<.35?2:story<.55?3:story<.78?4:5;$('#count').textContent='0'+chapter+' / 05';$('#chapterline i').style.width=(chapter*20)+'%';opacity('#scroll',1-ease(.015,.1,story));buttons.forEach((b,i)=>b.setAttribute('aria-current',String(i===(story<.12?0:story<.35?1:story<.55?2:story<.78?3:4))));requestAnimationFrame(frame)}
-frame();$('#status').hidden=true;window.study={renderer,scene,camera,desk,pivot,coaster,composer,matGroup,cutterGroup,version:"1.1",get photoReady(){return photoReady},get photoActive(){return photoActive},get labEnabled(){return labEnabled},get story(){return story},ritualRoot,beans,cup,handRoot,handJoints,get handReady(){return handReady},get handActive(){return handActive},get gripValue(){return gripValue},thermalUniforms,get bakeAvailable(){return bakeAvailable},get thermalMode(){return thermalMode}};
+frame();$('#status').hidden=true;window.study={renderer,scene,camera,desk,pivot,coaster,composer,matGroup,cutterGroup,version:"1.1",get photoReady(){return photoReady},get photoActive(){return photoActive},get macroReady(){return macroReady},get labEnabled(){return labEnabled},get story(){return story},ritualRoot,beans,cup,handRoot,handJoints,get handReady(){return handReady},get handActive(){return handActive},get gripValue(){return gripValue},thermalUniforms,get bakeAvailable(){return bakeAvailable},get thermalMode(){return thermalMode}};
 }catch(e){$('#msg').textContent='3D initialization failed: '+e.message+' — assets may still be exporting.';console.error(e)}
 </script></body></html>
