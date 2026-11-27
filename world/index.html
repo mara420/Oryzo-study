@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COASTER. — Spatial study V2</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COASTER. — Spatial study V2.1</title>
 <style>
 :root{--ink:#f3e5ce;--muted:#d6c3a8;--accent:#c69b66}*{box-sizing:border-box}html{scroll-behavior:auto}body{margin:0;color:var(--ink);background:#17110c;font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}#track{height:680vh}#world{position:fixed;inset:0;overflow:hidden;background:#17110c}#world canvas{display:block;width:100%;height:100%;touch-action:pan-y}#shade{position:fixed;inset:0;background:linear-gradient(90deg,#140d09a8,transparent 58%),linear-gradient(0deg,#140d0955,transparent 18%);pointer-events:none;z-index:1}header{position:fixed;top:0;left:0;width:100%;display:flex;align-items:center;justify-content:space-between;z-index:4;padding:30px 4.5vw;gap:14px;background:linear-gradient(#17110c22,transparent)}button,a{font:inherit;color:inherit}button{cursor:pointer;border:0;background:transparent}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:6px}#brand{letter-spacing:.17em;font-size:clamp(17px,2vw,26px);font-weight:600;padding:0}nav{display:flex;gap:clamp(13px,2vw,35px)}nav button{font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 0;border-bottom:1px solid transparent}nav button[aria-current=true]{border-color:var(--ink)}#copy{position:fixed;left:5%;top:35%;max-width:42vw;z-index:3;pointer-events:none}#eyebrow{letter-spacing:.19em;font:10px monospace;text-transform:uppercase;color:var(--muted);margin:0 0 15px}#headline{font-size:clamp(50px,7vw,118px);line-height:.91;letter-spacing:-.065em;margin:0;font-weight:600;text-wrap:balance}#lead{max-width:28vw;font-size:clamp(15px,1.65vw,25px);line-height:1.35;letter-spacing:-.025em;margin:21px 0 0;color:var(--ink)}#rail{position:fixed;bottom:5vh;left:5vw;display:flex;align-items:center;gap:12px;z-index:3;font:10px monospace;letter-spacing:.06em}#bar{width:130px;height:1px;background:#f3e5ce50}#bar i{height:1px;display:block;background:var(--ink);width:0}#hint{position:fixed;bottom:5vh;left:50%;transform:translateX(-50%);font:10px monospace;letter-spacing:.07em;color:var(--muted);white-space:nowrap;pointer-events:none;z-index:3}#controls{position:fixed;right:4.5vw;bottom:4vh;z-index:4;display:flex;gap:8px;align-items:center}#controls button,#controls a{border:1px solid #f3e5ce44;border-radius:30px;padding:9px 12px;font:10px monospace;text-decoration:none;background:#17110c66}#status{position:fixed;inset:0;display:grid;place-content:center;text-align:center;z-index:10;background:#17110c;gap:14px;padding:20px}#status[hidden]{display:none}#status h1{font-size:clamp(38px,7vw,100px);letter-spacing:-.07em;margin:0}#status p{color:var(--muted);font:11px monospace}#status a{font-size:13px}#diagnostic{position:fixed;top:78px;right:4.5vw;font:9px monospace;color:#d6c3a8b0;z-index:4;pointer-events:none}#cursorTip{position:fixed;right:5vw;top:50%;font:10px monospace;letter-spacing:.06em;pointer-events:none;z-index:3;opacity:0}#cursorTip.on{opacity:1}#reference{position:fixed;inset:0;z-index:12;background:#17110cee;display:grid;place-items:center;padding:5vw}#reference[hidden]{display:none}#reference img{max-width:100%;max-height:76vh;object-fit:contain}#reference button{position:absolute;right:5vw;top:3vh;padding:12px;border:1px solid #f3e5ce66;border-radius:30px}#reference p{position:absolute;bottom:3vh;color:var(--muted);font:11px monospace}
 @media(max-width:700px){header{padding:20px 5vw}nav{gap:10px}nav button{font-size:8px}#copy{top:17%;left:6%;max-width:88vw}#headline{font-size:clamp(36px,12vw,67px)}#lead{max-width:85vw;font-size:15px;margin-top:12px}#eyebrow{font-size:9px;margin-bottom:10px}#shade{background:linear-gradient(180deg,#140d09ab,transparent 50%,#140d0944)}#diagnostic{top:58px;right:5vw}#rail{bottom:10vh}#hint{bottom:15vh}#controls{bottom:3vh;right:5vw}#controls button,#controls a{font-size:9px;padding:8px}#cursorTip{display:none}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+#openingMark{position:fixed;left:4.5vw;top:9vh;z-index:2;pointer-events:none;font-size:clamp(74px,13vw,220px);letter-spacing:-.09em;font-weight:700;line-height:.8;transform-origin:left top;opacity:0}#copy{max-width:34vw}#headline{font-size:clamp(42px,5.6vw,94px)}#shade{background:linear-gradient(90deg,#140d0960,transparent 50%),linear-gradient(0deg,#140d0955,transparent 18%)}@media(max-width:700px){#openingMark{font-size:20vw;top:9vh}#copy{max-width:90vw}#headline{font-size:clamp(36px,10vw,60px)}}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"}}</script></head>
 <body><main id="track" aria-label="Continuous spatial workshop study"></main><div id="world"></div><div id="shade"></div><header><button id="brand" data-p="0">COASTER.</button><nav aria-label="Scenes"><button data-p="0">Workshop</button><button data-p=".30">Space</button><button data-p=".68">Product</button><button data-p=".96">Detail</button></nav></header>
-<div id="copy"><p id="eyebrow">01 — WORKSHOP</p><h1 id="headline">Coaster.</h1><p id="lead">The beauty of the ordinary.</p></div><div id="diagnostic">LOADING WORLD</div><div id="cursorTip">DRAG TO ROTATE</div><div id="rail"><span id="number">01 / 04</span><span id="bar"><i></i></span></div><div id="hint">SCROLL TO MOVE THROUGH SPACE</div><div id="controls"><button id="film" disabled>FOCUS OFF</button><button id="compare">REFERENCE</button><a href="../immersive/">V1.4 ↗</a></div><div id="status"><h1>Coaster.</h1><p id="loading">Preparing spatial geometry…</p><a href="../immersive/">Open previous stable version</a></div>
+<div id="openingMark" aria-hidden="true">COASTER.</div><div id="copy"><p id="eyebrow">01 — WORKSHOP</p><h1 id="headline">Coaster.</h1><p id="lead">The beauty of the ordinary.</p></div><div id="diagnostic">LOADING WORLD</div><div id="cursorTip">DRAG TO ROTATE</div><div id="rail"><span id="number">01 / 04</span><span id="bar"><i></i></span></div><div id="hint">SCROLL TO MOVE THROUGH SPACE</div><div id="controls"><button id="film" disabled>FOCUS OFF</button><button id="compare">REFERENCE</button><a href="../immersive/">V1.4 ↗</a></div><div id="status"><h1>Coaster.</h1><p id="loading">Preparing spatial geometry…</p><a href="../immersive/">Open previous stable version</a></div>
 <div id="reference" hidden><button id="closeRef">CLOSE ×</button><img src="../photo/assets/01-workshop.png" alt="Approved photographic target"><p>APPROVED VISUAL TARGET · NOT THE REAL-TIME RENDER</p></div>
 <script>
 const $=s=>document.querySelector(s);const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -31,25 +32,31 @@ import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {BokehPass} from 'three/addons/postprocessing/BokehPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 try{
-const renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;$('#world').append(renderer.domElement);
+const renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;$('#world').append(renderer.domElement);
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();fallback('WebGL context lost. Reload or open the stable version.');},{once:true});
-const scene=new T.Scene();scene.background=new T.Color('#21160f');scene.fog=new T.FogExp2('#21160f',.009);
+const scene=new T.Scene();scene.background=new T.Color('#21160f');scene.fog=new T.FogExp2('#21160f',.006);
 const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,180);
-const pmrem=new T.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.05).texture;room.dispose();scene.environmentIntensity=.37;
-const key=new T.DirectionalLight(0xffe8cc,2.0);key.position.set(-10,19,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-20,right:20,top:20,bottom:-20,near:.1,far:65});key.shadow.normalBias=.035;key.shadow.bias=-.00015;scene.add(key,key.target);
-const hemi=new T.HemisphereLight(0xffebd5,0x56422e,.52);scene.add(hemi);const rim=new T.DirectionalLight(0xffe0b4,.38);rim.position.set(10,10,-9);scene.add(rim);
+const pmrem=new T.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.05).texture;room.dispose();scene.environmentIntensity=.22;
+const key=new T.DirectionalLight(0xffd6a8,2.35);key.position.set(-10,19,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-20,right:20,top:20,bottom:-20,near:.1,far:65});key.shadow.normalBias=.035;key.shadow.bias=-.00015;scene.add(key,key.target);
+const hemi=new T.HemisphereLight(0xffdfba,0x513a27,.28);scene.add(hemi);const rim=new T.DirectionalLight(0xffd3a0,.28);rim.position.set(10,10,-9);scene.add(rim);
 const loader=new GLTFLoader();const rootPath='../assets/world-v20/';let baked=false,gltf;
 try{const res=await fetch(rootPath+'manifest.json');if(!res.ok)throw Error('New baked asset not published');const m=await res.json();if(m.version!==2)throw Error('Manifest mismatch');gltf=await loader.loadAsync(rootPath+'workshop.glb',e=>{if(e.total)$('#loading').textContent='Loading baked world '+Math.round(e.loaded/e.total*100)+'%'});baked=true;}
 catch(e){console.info('Using existing real spatial workshop until baked export is available',e.message);gltf=await loader.loadAsync('../assets/workshop-v04/workshop.glb',e=>{if(e.total)$('#loading').textContent='Loading spatial world '+Math.round(e.loaded/e.total*100)+'%'});}
 const desk=gltf.scene;scene.add(desk);desk.updateMatrixWorld(true);
 const product=desk.getObjectByName('CoasterProduct');if(!product)throw Error('Product mesh missing');
 const bounds=new T.Box3().setFromObject(product),pivot=new T.Group();pivot.name='ContinuousProduct';pivot.position.copy(bounds.getCenter(new T.Vector3()));scene.add(pivot);pivot.updateMatrixWorld(true);pivot.attach(product);const base=pivot.position.clone(),size=bounds.getSize(new T.Vector3()),radius=Math.max(size.x,size.z)/2;
-let staticMeshes=0,bakedMeshes=0;
+let staticMeshes=0,bakedMeshes=0;const tuned=new Set();
 const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
 desk.traverse(o=>{if(!o.isMesh)return;staticMeshes++;const name=norm(o.name),mats=[].concat(o.material||[]),ground=/woodenworksurface|bakedwood|^mat|bakedmat|gridvertical|gridhorizontal/.test(name);
 if(baked&&mats.every(m=>/baked/.test(norm(m.name))&&m.map)){const conv=m=>new T.MeshBasicMaterial({map:m.map,color:0xffffff,toneMapped:false,side:m.side});o.material=Array.isArray(o.material)?mats.map(conv):conv(mats[0]);bakedMeshes++;o.castShadow=false;o.receiveShadow=false;}
-else{o.castShadow=!ground;o.receiveShadow=true;for(const m of mats){if(/cuttingmat/.test(norm(m.name)))m.color.set('#38442e');if(/fadedprintedgrid/.test(norm(m.name)))m.color.set('#777659');if(m.normalScale)m.normalScale.multiplyScalar(.75);m.needsUpdate=true;}}});
-const productMats=new Set();product.traverse(o=>{if(!o.isMesh)return;o.castShadow=true;o.receiveShadow=true;for(const m of [].concat(o.material||[])){productMats.add(m);m.color.set('#d5b08a');m.roughness=.91;m.metalness=0;m.envMapIntensity=.26;if(m.normalScale)m.normalScale.set(.8,.8);m.needsUpdate=true;}});
+else{o.castShadow=!ground;o.receiveShadow=true;for(const m of mats){if(tuned.has(m))continue;tuned.add(m);
+ const k=norm(m.name);
+ if(/woodenworksurface|cc0oakworktop/.test(name+k)){m.color.set('#b99b73');m.roughnessMap=null;m.roughness=.97;m.metalnessMap=null;m.metalness=0;m.envMapIntensity=.08;if(m.normalScale)m.normalScale.set(.10,.10);}
+ else if(/cuttingmat/.test(k)){m.color.set('#35402a');m.roughness=.99;m.metalness=0;m.envMapIntensity=.06;}
+ else if(/fadedprintedgrid/.test(k)){m.color.set('#79775a');m.roughness=1;m.metalness=0;m.envMapIntensity=.05;}
+ else if(m.normalScale)m.normalScale.multiplyScalar(.75);
+ m.needsUpdate=true;}}});
+const productMats=new Set();product.traverse(o=>{if(!o.isMesh)return;o.castShadow=true;o.receiveShadow=true;for(const m of [].concat(o.material||[])){productMats.add(m);m.color.set('#bc8250');m.roughnessMap=null;m.roughness=.96;m.metalnessMap=null;m.metalness=0;m.envMapIntensity=.10;if(m.normalScale)m.normalScale.set(.28,.28);m.needsUpdate=true;}});
 // Real-time shadow on a thin receiver over the baked mat; the environment
 // remains geometry and its own static shadows remain baked. No photo plate.
 const receiver=new T.Mesh(new T.PlaneGeometry(27,19),new T.ShadowMaterial({opacity:.29,depthWrite:false}));receiver.rotation.x=-Math.PI/2;receiver.position.set(4.8,.103,-.5);receiver.rotation.z=-Math.PI/36;receiver.receiveShadow=true;receiver.visible=baked;scene.add(receiver);
@@ -57,7 +64,7 @@ const env=new RGBELoader().loadAsync('../assets/workshop-v04/studio.hdr').then(h
 // Use the existing same CC0 maps on the same product throughout the shot.
 (async()=>{try{const tl=new T.TextureLoader(),[color,normal,rough]=await Promise.all(['cork-color.jpg','cork-normal.jpg','cork-rough.jpg'].map(n=>tl.loadAsync('../assets/hero-v11/'+n)));
 function inherit(old,src,cs){const t=old?old.clone():src.clone();t.source=new T.Source(src.image);t.flipY=false;t.colorSpace=cs;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;return t;}
-for(const m of productMats){m.map=inherit(m.map,color,T.SRGBColorSpace);m.normalMap=inherit(m.normalMap||m.map,normal,T.NoColorSpace);m.roughnessMap=inherit(m.roughnessMap||m.map,rough,T.NoColorSpace);m.needsUpdate=true;}
+for(const m of productMats){m.map=inherit(m.map,color,T.SRGBColorSpace);m.normalMap=inherit(m.normalMap||m.map,normal,T.NoColorSpace);m.roughnessMap=null;m.roughness=.96;m.needsUpdate=true;}
 }catch(e){console.warn('Keeping original cork maps',e);}})();
 // Optional lens depth of field uses the SAME renderer, default disabled.
 let composer=null,bokeh=null,film=false;try{composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));bokeh=new BokehPass(scene,camera,{focus:30,aperture:.00065,maxblur:.004});composer.addPass(bokeh);composer.addPass(new OutputPass());$('#film').disabled=false;}catch(e){composer=null}
@@ -66,14 +73,14 @@ function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWi
 // One world-space camera route. Every object stays in its actual 3D position.
 // key: scroll, camera x/y/z, focus x/y/z, product lift, pitch, yaw, roll, fov
 const keys=[
- [0,-3,32,2.5,0,.6,0,0,0,0,0,35],
+ [0,-2.5,32,2.5,0,.6,0,0,0,0,0,35],
  [.12,-6,26,8,0,.7,0,0,0,0,0,35],
  [.30,-9,13,18,0,.9,0,0,0,0,0,36],
  [.42,-6,9,15,0,1.5,0,.8,.05,.12,0,37],
- [.56,1,13,18,0,4.8,0,4.4,.18,.38,-.05,34],
- [.68,6,15,17,0,7.4,0,7.0,.38,.68,-.08,34],
- [.82,4,17,12,0,9.9,0,9.5,.58,1.04,-.04,32],
- [1,1,17,6.8,0,10.1,0,9.5,.26,1.24,-.02,29]
+ [.56,-2,10.0,18,0,7.0,0,6.5,.60,.10,-.10,35],
+ [.68,3,9.5,19,0,12.8,0,12.4,1.33,.20,-.26,34],
+ [.82,5,12.5,15,0,16.8,0,16.4,1.22,.50,-.16,32],
+ [1,2,15,6.8,0,17.1,0,16.4,1.20,.35,-.10,29]
 ];
 function tangent(i,j){if(i===0||i===keys.length-1)return 0;const a=keys[i-1],b=keys[i],c=keys[i+1],l=(b[j]-a[j])/(b[0]-a[0]),r=(c[j]-b[j])/(c[0]-b[0]);return l*r<=0?0:2*l*r/(l+r)}
 function poseAt(p){let i=0;while(i<keys.length-2&&p>keys[i+1][0])i++;const a=keys[i],b=keys[i+1],h=b[0]-a[0],t=clamp((p-a[0])/h),t2=t*t,t3=t2*t;return a.slice(1).map((v,j)=>(2*t3-3*t2+1)*v+(t3-2*t2+t)*h*tangent(i,j+1)+(-2*t3+3*t2)*b[j+1]+(t3-t2)*h*tangent(i+1,j+1));}
@@ -95,22 +102,22 @@ function frame(now){if(renderer.getContext().isContextLost())return;
  // so the product never sits under the headline.
  const portrait=camera.aspect<.9;if(portrait){camOffset.copy(camera.position).sub(target).multiplyScalar(1.28);camera.position.copy(target).add(camOffset);}
  camera.lookAt(target);camera.fov=fov+(portrait?12:0);camera.updateProjectionMatrix();
- const sx=portrait?.50:mix(.61,.65,ease(.3,.65,p)),sy=portrait?.66:mix(.49,.52,ease(.8,1,p));
+ const sx=portrait?.50:mix(.56,.52,ease(.35,.70,p)),sy=portrait?.65:mix(.50,.46,ease(.55,.80,p));
  camera.projectionMatrix.elements[8]=1-2*sx;camera.projectionMatrix.elements[9]=2*sy-1;camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
- key.target.position.copy(pivot.position);key.position.set(-10,19+lift*.45,7);key.intensity=mix(2,2.25,ease(.55,.8,p));rim.intensity=mix(.38,.9,ease(.55,.8,p));
+ key.target.position.copy(pivot.position);key.position.set(-10,19+lift*.45,7);key.intensity=mix(2.35,2.75,ease(.55,.8,p));rim.intensity=mix(.28,.75,ease(.55,.8,p));
  // The desk is NEVER translated away, hidden, or replaced by a photograph.
  // Camera motion and fog create actual foreground/background parallax.
- scene.fog.density=mix(.009,.018,ease(.60,.93,p));
+ scene.fog.density=mix(.006,.011,ease(.60,.93,p));scene.background.setRGB(mix(.023,.012,ease(.45,.75,p)),mix(.014,.007,ease(.45,.75,p)),mix(.009,.004,ease(.45,.75,p)));scene.fog.color.copy(scene.background);
  if(film&&composer){try{bokeh.uniforms.focus.value=camera.position.distanceTo(pivot.position);bokeh.uniforms.aperture.value=.0007+.001*ease(.82,1,p);composer.render();}catch(e){film=false;$('#film').textContent='FOCUS OFF';renderer.setRenderTarget(null);renderer.render(scene,camera);}}
  else renderer.render(scene,camera);
  const i=p<.20?0:p<.48?1:p<.86?2:3;
  if(i!==chapter){chapter=i;$('#eyebrow').textContent=labels[i][0];$('#headline').textContent=labels[i][1];$('#lead').textContent=labels[i][2];$('#number').textContent='0'+(i+1)+' / 04';nav.forEach((b,j)=>b.setAttribute('aria-current',String(i===j)));}
- const fade=Math.max(...[.20,.48,.86].map(t=>Math.max(0,1-Math.abs(p-t)/.028)));$('#copy').style.opacity=1-.88*fade;$('#copy').style.transform='translateY('+(-fade*8)+'px)';
+ const fade=Math.max(...[.20,.48,.86].map(t=>Math.max(0,1-Math.abs(p-t)/.028)));const intro=1-ease(.02,.14,p);$('#openingMark').style.opacity=intro;$('#openingMark').style.transform='scale('+mix(.94,1,intro)+')';$('#copy').style.opacity=(1-.88*fade)*(1-.4*intro);$('#copy').style.transform='translateY('+(-fade*8)+'px)';
  $('#cursorTip').classList.toggle('on',dragWeight>.85);renderer.domElement.style.cursor=drag?'grabbing':dragWeight>.85?'grab':'default';$('#bar i').style.width=(p*100)+'%';
  lastRenderP=p;requestAnimationFrame(frame);
 }
-ready=true;$('#status').hidden=true;$('#diagnostic').textContent=baked?'V2.0 · CYCLES BAKED WORLD':'V2.0 · ORIGINAL 3D WORLD';
-window.worldStudy={renderer,scene,camera,desk,product,pivot,base,receiver,baked,staticMeshes,bakedMeshes,get progress(){return lastRenderP},get chapter(){return chapter},get film(){return film},get dragX(){return dx}};
+ready=true;$('#status').hidden=true;$('#diagnostic').textContent=baked?'V2.1 · CYCLES BAKED WORLD':'V2.1 · CALIBRATED 3D WORLD';
+window.worldStudy={version:'2.1',renderer,scene,camera,desk,product,pivot,base,receiver,baked,staticMeshes,bakedMeshes,get progress(){return lastRenderP},get chapter(){return chapter},get film(){return film},get dragX(){return dx}};
 requestAnimationFrame(frame);
 }catch(e){console.error(e);fallback('Could not load spatial world: '+e.message)}
 </script></body></html>
