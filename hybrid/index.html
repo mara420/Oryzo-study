@@ -25,7 +25,7 @@ function ready(im){return im.complete&&im.naturalWidth?Promise.resolve():new Pro
 // Remove the isolated product from the photograph, keeping its original typography,
 // ambient light and the photographic shadow underneath. Interpolate smooth dark backdrop
 // from the visible sides of the silhouette rather than drawing a second product.
-let objectPlate;
+let objectPlate,heroPlate;
 async function prepareObjectPlate(){await ready(images[1]);const im=images[1],c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);const image=ctx.getImageData(0,0,c.width,c.height),w=c.width,h=c.height,d=image.data,src=new Uint8ClampedArray(d);
 const cx=.597*w,cy=.481*h,rx=.205*w,ry=.373*h;
 for(let y=Math.max(0,Math.floor(cy-ry));y<Math.min(h,Math.ceil(cy+ry));y++){
@@ -35,31 +35,53 @@ for(let y=Math.max(0,Math.floor(cy-ry));y<Math.min(h,Math.ceil(cy+ry));y++){
 }
 ctx.putImageData(image,0,0);objectPlate=c;plateReady=true;}
 prepareObjectPlate().catch(()=>{plateReady=false});
+// The original hero remains the exact still image at rest. A short live reveal
+// uses a reconstructed local cutting-mat patch under the moving coaster.
+async function prepareHeroPlate(){
+ await ready(images[0]);const im=images[0],c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;
+ const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);const pixels=ctx.getImageData(0,0,c.width,c.height),w=c.width,h=c.height,d=pixels.data,src=new Uint8ClampedArray(d);
+ const cx=.559*w,cy=.481*h,rx=.166*w,ry=.290*h;
+ const cell=.030*w,stepY=.052*h;
+ for(let y=Math.max(0,Math.floor(cy-ry));y<Math.min(h,Math.ceil(cy+ry));y++)for(let x=Math.max(0,Math.floor(cx-rx));x<Math.min(w,Math.ceil(cx+rx));x++){
+  const r=Math.hypot((x-cx)/rx,(y-cy)/ry);if(r>=1)continue;
+  // Tile real green mat pixels from an unobstructed upper section, aligned
+  // approximately with the photographed perspective. This is not a 3D scan.
+  const mod=(v,n)=>((v%n)+n)%n;
+  const sy=Math.floor(.112*h+mod(y+.045*x-.112*h,stepY));
+  const sx=Math.floor(.465*w+mod(x-.11*(y-sy)-.465*w,cell*3));
+  const j=(sy*w+sx)*4,i=(y*w+x)*4,alpha=1-ease(.93,1,r);
+  for(let k=0;k<3;k++)d[i+k]=mix(src[i+k],src[j+k]*.90,alpha);
+ }
+ ctx.putImageData(pixels,0,0);heroPlate=c;heroReady=true;
+}
+prepareHeroPlate().catch(()=>{heroReady=false});
 Promise.all(images.map(ready)).catch(()=>{$('#fallback').hidden=false;$('#fallback').textContent='Some images failed to load.'});
-window.hybrid={get scene(){return webgl},get progress(){return p},get chapter(){return current},get plateReady(){return plateReady},get liveActive(){return live.classList.contains('active')},get photoOnly(){return photoEnabled},get dragX(){return dragX}};
+window.hybrid={get scene(){return webgl},get progress(){return p},get chapter(){return current},get plateReady(){return plateReady},get heroReady(){return heroReady},get liveActive(){return live.classList.contains('active')},get photoOnly(){return photoEnabled},get dragX(){return dragX}};
 window.attachCoaster=api=>{webgl=api;mode.disabled=false;mode.textContent='LIVE 3D ON';};
 window.coasterFailed=()=>{mode.disabled=true;mode.textContent='PHOTO MODE';$('#fallback').hidden=false;};
 mode.onclick=()=>{photoEnabled=!photoEnabled;mode.textContent=photoEnabled?'LIVE 3D OFF':'LIVE 3D ON';mode.setAttribute('aria-pressed',String(!photoEnabled));};
 addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect();mx=clamp((e.clientX-r.left)/r.width-.5,-.5,.5);my=clamp((e.clientY-r.top)/r.height-.5,-.5,.5);if(drag){dragX=clamp(drag.x+(e.clientX-drag.sx)*.009,-1.1,1.1);dragY=clamp(drag.y+(e.clientY-drag.sy)*.009,-.8,.8)}});
 live.addEventListener('pointerdown',e=>{if(!live.classList.contains('active'))return;drag={sx:e.clientX,sy:e.clientY,x:dragX,y:dragY};live.setPointerCapture(e.pointerId);});
 live.addEventListener('pointerup',()=>drag=null);live.addEventListener('pointercancel',()=>drag=null);live.addEventListener('dblclick',()=>{dragX=dragY=0;});
-let cleanDrawn=false;
+let cleanDrawn='';
 function renderFrame(now){const dt=Math.min(.1,Math.max(.001,(now-last)/1000));last=now;const wanted=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight));p=reduce?wanted:mix(p,wanted,1-Math.exp(-dt/.19));if(Math.abs(p-wanted)<.00004)p=wanted;
  const weights=[1-ease(.12,.205,p),ease(.12,.205,p)*(1-ease(.355,.455,p)),ease(.355,.455,p)*(1-ease(.56,.645,p)),ease(.56,.645,p)*(1-ease(.765,.855,p)),ease(.765,.855,p)];
  const idx=weights.indexOf(Math.max(...weights));if(idx!==current||!$('#mobileCopy h1').textContent){current=idx;$('#mobileCopy h1').textContent=data[idx][1];$('#mobileCopy p').textContent=data[idx][2];nav.forEach((b,i)=>b.setAttribute('aria-current',String(i===idx)));$('#next').textContent=idx===4?'REPLAY ↑':'NEXT ↓';}
  // Fully live product during the second chapter. Fade the photographic original
  // out before revealing its empty plate, preventing two superimposed coasters.
  const can3d=!!webgl&&plateReady&&!photoEnabled;
- const liveIn=can3d?ease(.195,.222,p)*(1-ease(.335,.365,p)):0;
- const useLive=liveIn>.001;
- if(useLive&&!cleanDrawn&&objectPlate){clean.width=objectPlate.width;clean.height=objectPlate.height;clean.getContext('2d').drawImage(objectPlate,0,0);cleanDrawn=true;}
+ const heroLive=can3d&&heroReady?ease(.026,.045,p)*(1-ease(.105,.128,p)):0;
+ const objectLive=can3d?ease(.195,.222,p)*(1-ease(.335,.365,p)):0;
+ const liveIn=Math.max(heroLive,objectLive),kind=heroLive>objectLive?'hero':'object',useLive=liveIn>.001;
+ const plate=kind==='hero'?heroPlate:objectPlate;
+ if(useLive&&cleanDrawn!==kind&&plate){clean.width=plate.width;clean.height=plate.height;clean.getContext('2d').drawImage(plate,0,0);cleanDrawn=kind;}
  for(let i=0;i<images.length;i++){images[i].style.opacity=weights[i];const amount=reduce?0:(i===0||i===1?0:.025);const local=clamp((p-stops[i])/.2,-1,1);images[i].style.transform='scale('+(1+amount*(.5+.5*local))+') translate('+(-mx*amount*20)+'px,'+(-my*amount*20)+'px)';}
  clean.style.opacity=liveIn;live.style.opacity=liveIn;live.classList.toggle('active',liveIn>.98);live.style.cursor=drag?'grabbing':'grab';
  // At the two takeover points a brief dip-to-black hides the geometry/photo seam.
- const seam=can3d?Math.max(ease(.185,.199,p)*(1-ease(.199,.225,p)),ease(.333,.350,p)*(1-ease(.350,.371,p))):0;
+ const seam=can3d?Math.max(heroReady?ease(.020,.034,p)*(1-ease(.034,.054,p)):0,heroReady?ease(.103,.118,p)*(1-ease(.118,.145,p)):0,ease(.185,.199,p)*(1-ease(.199,.225,p)),ease(.333,.350,p)*(1-ease(.350,.371,p))):0;
  $('#curtain').style.opacity=reduce?0:seam*.83;
- if(useLive){const local=clamp((p-.222)/.113);webgl.draw(local,reduce?0:mx,reduce?0:my,dragX,dragY,dt);}
- if(idx!==1&&!drag){dragX=mix(dragX,0,1-Math.exp(-dt*5));dragY=mix(dragY,0,1-Math.exp(-dt*5));}
+ if(useLive){const local=kind==='hero'?clamp((p-.045)/.060):clamp((p-.222)/.113);webgl.draw(local,reduce?0:mx,reduce?0:my,dragX,dragY,dt,kind);}
+ if(!useLive&&!drag){dragX=mix(dragX,0,1-Math.exp(-dt*5));dragY=mix(dragY,0,1-Math.exp(-dt*5));}
  $('#hint').firstChild.nodeValue=useLive?'DRAG TO ROTATE · SCROLL TO MOVE':'SCROLL TO EXPLORE';$('#livehint').textContent=useLive?'LIVE WEBGL PRODUCT':'PHOTOGRAPHIC CHAPTER / 0'+(idx+1);$('#replay').classList.toggle('on',idx===4);$('#progress').style.width=(wanted*100)+'%';requestAnimationFrame(renderFrame);}
 requestAnimationFrame(renderFrame);
 </script>
@@ -80,19 +102,19 @@ const mats=new Set();product.traverse(o=>{if(o.isMesh){for(const m of [].concat(
 function resize(){const r=stage.getBoundingClientRect();renderer.setSize(Math.max(1,Math.round(r.width)),Math.max(1,Math.round(r.height)),false);}new ResizeObserver(resize).observe(stage);resize();
 new RGBELoader().loadAsync('../assets/workshop-v04/studio.hdr').then(h=>{const old=scene.environment;scene.environment=pmrem.fromEquirectangular(h).texture;old.dispose();h.dispose();pmrem.dispose()}).catch(()=>pmrem.dispose());
 let yaw=0,pitch=0;
-function draw(t,x,y,dx,dy,dt){
+function draw(t,x,y,dx,dy,dt,kind){
  // The original GLB geometry is rendered with actual lighting, normals and moving perspective.
  // The stationary approved background keeps its built-in typography.
  const a=1-Math.exp(-Math.max(.001,dt)*11);
  yaw=T.MathUtils.lerp(yaw,dx+x*.23,a);pitch=T.MathUtils.lerp(pitch,dy+y*.17,a);
- const bend=reduce?0:Math.sin(t*Math.PI)*.44;
- root.rotation.set(bend+pitch, yaw+(reduce?0:t*.55),reduce?0:Math.sin(t*Math.PI)*-.12);
- const elevation=reduce?1.49:1.49-.17*Math.sin(t*Math.PI);
+ const hero=kind==='hero';const bend=reduce?0:Math.sin(t*Math.PI)*(hero ? .14 : .44);
+ root.rotation.set(bend+pitch*(hero ? .45 : 1),yaw+(reduce?0:t*(hero ? .12 : .55)),reduce?0:Math.sin(t*Math.PI)*(hero?-.04:-.12));
+ const elevation=reduce?1.49:hero?1.55-.05*Math.sin(t*Math.PI):1.49-.17*Math.sin(t*Math.PI);
  camera.position.set(0,Math.sin(elevation)*25,Math.cos(elevation)*25);
  camera.up.set(0,1,0);camera.lookAt(0,0,0);
- const height=T.MathUtils.lerp(12.85,11.9,reduce?0:Math.sin(t*Math.PI)),width=height*16/9;
+ const height=hero?T.MathUtils.lerp(16.45,16.0,reduce?0:Math.sin(t*Math.PI)):T.MathUtils.lerp(12.85,11.9,reduce?0:Math.sin(t*Math.PI)),width=height*16/9;
  // Match the center of the original isolated product image.
- const cx=.597,cy=.481;
+ const cx=hero ? .559 : .597,cy=.481;
  camera.left=-cx*width;camera.right=(1-cx)*width;camera.top=cy*height;camera.bottom=-(1-cy)*height;camera.updateProjectionMatrix();
  renderer.render(scene,camera);
 }
