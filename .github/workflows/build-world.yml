@@ -1,0 +1,93 @@
+name: V2 spatial world production
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/build_world_v20.py'
+      - '.github/workflows/build-world.yml'
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: world-v20-assets
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: workshop-reference
+          run-id: 45719520519
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: reference
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy python3-pil
+      - name: Render references, bake real geometry and export
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: blender --background reference/workshop.blend --python-use-system-env --python-exit-code 1 --python tools/build_world_v20.py
+      - name: Validate spatial asset and compact baked textures
+        run: |
+          /usr/bin/python3 - <<'PY'
+          import pathlib,struct,json,io
+          from PIL import Image
+          root=pathlib.Path("assets/world-v20")
+          p=root/"workshop.glb";raw=p.read_bytes()
+          magic,ver,total,jlen,jtype=struct.unpack_from("<4sIIII",raw)
+          assert (magic,ver,total,jtype)==(b'glTF',2,len(raw),0x4e4f534a)
+          doc=json.loads(raw[20:20+jlen])
+          blen,btype=struct.unpack_from("<II",raw,20+jlen)
+          assert btype==0x004e4942 and len(doc["buffers"])==1
+          binary=raw[28+jlen:28+jlen+blen];views=doc["bufferViews"]
+          chunks=[binary[v.get("byteOffset",0):v.get("byteOffset",0)+v["byteLength"]] for v in views]
+          names={n.get("name","") for n in doc["nodes"]}
+          assert {"CoasterProduct","BakedWood","BakedMat","BakedProps"}<=names,names
+          data=set()
+          for mat in doc.get("materials",[]):
+              for info in (mat.get("normalTexture"),mat.get("occlusionTexture"),mat.get("pbrMetallicRoughness",{}).get("metallicRoughnessTexture")):
+                  if info and "index" in info:data.add(doc["textures"][info["index"]].get("source"))
+          for i,im in enumerate(doc.get("images",[])):
+              if i in data or "bufferView" not in im:continue
+              idx=im["bufferView"]
+              with Image.open(io.BytesIO(chunks[idx])) as image:
+                  if "A" in image.getbands() and image.getchannel("A").getextrema()!=(255,255):continue
+                  b=io.BytesIO();image.convert("RGB").save(b,"JPEG",quality=92,subsampling=0,optimize=True)
+                  chunks[idx]=b.getvalue();im["mimeType"]="image/jpeg"
+          packed=bytearray()
+          for v,c in zip(views,chunks):
+              packed.extend(b'\0'*((-len(packed))%4));v["byteOffset"]=len(packed);v["byteLength"]=len(c);packed.extend(c)
+          packed.extend(b'\0'*((-len(packed))%4));doc["buffers"][0]["byteLength"]=len(packed)
+          js=json.dumps(doc,separators=(',',':')).encode();js+=b' '*((-len(js))%4)
+          p.write_bytes(struct.pack('<4sII',b'glTF',2,12+8+len(js)+8+len(packed))+struct.pack('<II',len(js),0x4e4f534a)+js+struct.pack('<II',len(packed),0x004e4942)+packed)
+          assert p.stat().st_size<60_000_000,p.stat().st_size
+          for name in ("BakedWood","BakedMat","BakedProps"):
+              with Image.open(root/(name+".png")) as im:
+                  im.load();assert im.convert("L").getextrema()[1]>30
+          (root/"manifest.json").write_text(json.dumps({"version":2,"bakedGroups":3,"bytes":p.stat().st_size,"representation":"mesh + baked lighting"},indent=2))
+          print("Valid spatial world",p.stat().st_size,len(doc["nodes"]),"nodes")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: world-v20-production
+          path: |
+            assets/world-v20/
+            /tmp/world-v20-source.blend
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish new spatial assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/world-v20/workshop.glb assets/world-v20/manifest.json assets/world-v20/README.txt assets/world-v20/01-overhead.jpg assets/world-v20/02-low-angle.jpg
+          git diff --cached --quiet && exit 0
+          git commit -m 'Publish validated V2 spatial world geometry and Cycles lighting'
+          git pull --rebase origin main
+          git push origin HEAD:main
