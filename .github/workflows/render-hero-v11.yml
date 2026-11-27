@@ -25,12 +25,32 @@ jobs:
           run-id: 45719520519
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: reference
+      - uses: actions/download-artifact@v4
+        with:
+          name: ORYZO-production-assets
+          run-id: 45718907729
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: production-assets
       - name: Install Blender
         run: |
           sudo apt-get update
           sudo apt-get install -y blender python3-pil
       - name: Render camera-matched photographic plates
         run: blender --background reference/workshop.blend --python-exit-code 1 --python tools/render_hero_v11.py
+      - name: Prepare 2K cork maps for live macro shots
+        run: |
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root=Path("assets/hero-v11")
+          for suffix,filename in [("Color","cork-color.jpg"),("NormalGL","cork-normal.jpg"),("Roughness","cork-rough.jpg")]:
+              source=next(Path("production-assets").rglob("Cork*"+suffix+".jpg"))
+              with Image.open(source) as im:
+                  im=im.convert("RGB")
+                  im.thumbnail((2048,2048),Image.Resampling.LANCZOS)
+                  im.save(root/filename,quality=94,subsampling=0,optimize=True)
+              print(filename,(root/filename).stat().st_size)
+          PY
       - name: Validate camera plates
         run: |
           /usr/bin/python3 - <<'PY'
