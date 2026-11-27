@@ -1,0 +1,47 @@
+name: Test V1.0 unified experience
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'v1/**'
+      - 'tools/smoke_v1.mjs'
+      - '.github/workflows/test-v1.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v1-webgl-test
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          import re,pathlib
+          s=pathlib.Path("v1/index.html").read_text()
+          pathlib.Path("/tmp/v1.mjs").write_text(re.search(r'<script type="module">(.*?)</script>',s,re.S).group(1))
+          PY
+          node --check /tmp/v1.mjs
+          node --check tools/smoke_v1.mjs
+      - run: npm install --no-save --no-package-lock playwright@1.51.1 three@0.178.0
+      - run: npx playwright install --with-deps chromium
+      - name: Test all five chapters
+        run: |
+          python3 -m http.server 8765 >/tmp/oryzo-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8765/v1/ >/dev/null && break; sleep 1; done
+          node tools/smoke_v1.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v1-browser-checkpoints
+          path: test-output/
+          if-no-files-found: warn
+          retention-days: 14
