@@ -45,7 +45,7 @@ for o in product:o.hide_render=True;o.hide_set(True)
 # Bake static geometry into three real mesh atlases (wood, cutting mat, props).
 # Explicitly bind original UV coordinates so creating bake UVs cannot change source maps.
 for m in list(bpy.data.materials):
-    if not m.use_nodes:continue
+    if not m.use_nodes or m==cork:continue
     for n in list(m.node_tree.nodes):
         if n.bl_idname=="ShaderNodeTexCoord":
             for link in list(n.outputs["UV"].links):
