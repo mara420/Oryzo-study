@@ -1,0 +1,63 @@
+name: V1.1 photographic environment
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/render_hero_v11.py'
+      - '.github/workflows/render-hero-v11.yml'
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: hero-v11
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: workshop-reference
+          run-id: 45719520519
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: reference
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-pil
+      - name: Render camera-matched photographic plates
+        run: blender --background reference/workshop.blend --python-exit-code 1 --python tools/render_hero_v11.py
+      - name: Validate camera plates
+        run: |
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root=Path("assets/hero-v11")
+          for name,size in [("desktop-plate",(1600,900)),("mobile-plate",(900,1600)),("desktop-reference",(1600,900))]:
+              p=root/(name+".jpg")
+              with Image.open(p) as im:
+                  im.load()
+                  assert im.size==size and im.convert("L").getextrema()[1]>im.convert("L").getextrema()[0]
+              print(name,p.stat().st_size)
+              assert 20000<p.stat().st_size<5000000
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v11-photographic-plates
+          path: assets/hero-v11/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish validated photographic environments
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/hero-v11/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Publish V1.1 camera-matched Cycles renders'
+          git pull --rebase origin main
+          git push origin HEAD:main
