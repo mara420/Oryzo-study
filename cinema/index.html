@@ -6,9 +6,9 @@
 /* One composite: opaque photographs underneath, a single continuous live product, then photographic close-ups. */
 #takeover,#front,#clean2,#contactShadow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #takeover{z-index:2;opacity:0;isolation:isolate}#clean,#clean2{z-index:0;opacity:1;object-fit:fill;transform:none}#clean2{opacity:0}#contactShadow{z-index:1;inset:auto;width:29%;height:12%;border-radius:50%;background:radial-gradient(ellipse,#100a0570,transparent 72%);transform:translate(-50%,-50%);filter:blur(5px);opacity:0}#live{z-index:2;opacity:1}#live.active{pointer-events:auto}#front{z-index:4;opacity:0;overflow:hidden;isolation:isolate}#front img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;will-change:opacity,transform;transform-origin:50% 45%;opacity:0}#front img:first-child{opacity:1}#curtain{display:none}#grain{z-index:5;opacity:.12}#mode{font-size:9px;padding:7px 12px;background:#17110b85}#mode[aria-pressed=true]{background:#17110b85;color:#f4e5cf;border-color:#f4e5cf55}#credit{opacity:.7}#track{height:920vh}
-#depthPhoto{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;display:none}#front.depth-ready #depthPhoto{display:block}#front.depth-ready img{visibility:hidden}#track{height:840vh}#stage{container-type:inline-size}#contactShadow{filter:blur(4px)}#mode{opacity:.8}#mode:hover{opacity:1}#nav{background:#17110b66;border-color:#f4e5cf33}#hint{font-size:9px}#grain{opacity:.2}#next{background:#17110b77}#credit{font-size:9px}
+#plates{background:#17110b url('../photo/assets/01-workshop.png') center / 100% 100% no-repeat}#depthPhoto{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;display:none}#front.depth-ready #depthPhoto{display:block}#front.depth-ready img{visibility:hidden}#track{height:840vh}#stage{container-type:inline-size}#contactShadow{filter:blur(4px)}#mode{opacity:.8}#mode:hover{opacity:1}#nav{background:#17110b66;border-color:#f4e5cf33}#hint{font-size:9px}#grain{opacity:.2}#next{background:#17110b77}#credit{font-size:9px}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"}}</script></head>
-<body><main id="track" aria-label="Five scroll-driven chapters"><h1 class="sr">COASTER. A photographic and live 3D study</h1></main><div id="viewport"><div id="stage"><div id="plates"></div><div id="takeover"><canvas id="clean" aria-hidden="true"></canvas><canvas id="clean2" aria-hidden="true"></canvas><div id="contactShadow"></div><div id="live" aria-label="Live 3D coaster"></div></div><div id="front"><div id="depthPhoto" aria-hidden="true"></div></div><div id="curtain"></div><div id="grain"></div><div id="fallback" hidden>Photo mode · WebGL unavailable</div><button class="hit product" data-go="1" aria-label="Product"></button><button class="hit materials" data-go="3" aria-label="Materials"></button><button class="hit story" data-go="2" aria-label="Touch"></button><button class="hit contact" data-go="4" aria-label="Ritual"></button><button id="replay" aria-label="Experience again"></button></div><div id="mobileCopy"><h1></h1><p></p></div></div><div id="progress"></div><button id="mode" aria-pressed="true" disabled>LOADING 3D</button><a id="credit" href="../flow/">V1.2 ↗</a><nav id="nav" aria-label="Chapters"></nav><button id="next">NEXT ↓</button><div id="hint">SCROLL TO EXPLORE<span id="livehint">PHOTOGRAPHIC INTRO</span></div>
+<body><main id="track" aria-label="Five scroll-driven chapters"><h1 class="sr">COASTER. A photographic and live 3D study</h1></main><div id="viewport"><div id="stage"><div id="plates"></div><div id="takeover"><canvas id="clean" aria-hidden="true"></canvas><canvas id="clean2" aria-hidden="true"></canvas><div id="contactShadow"></div><div id="live" aria-label="Live 3D coaster"></div></div><div id="front"><div id="depthPhoto" aria-hidden="true"></div></div><div id="curtain"></div><div id="grain"></div><div id="fallback" hidden>Photo mode · WebGL unavailable. <a href="../flow/">Open stable version ↗</a></div><button class="hit product" data-go="1" aria-label="Product"></button><button class="hit materials" data-go="3" aria-label="Materials"></button><button class="hit story" data-go="2" aria-label="Touch"></button><button class="hit contact" data-go="4" aria-label="Ritual"></button><button id="replay" aria-label="Experience again"></button></div><div id="mobileCopy"><h1></h1><p></p></div></div><div id="progress"></div><button id="mode" aria-pressed="true" disabled>LOADING 3D</button><a id="credit" href="../flow/">V1.2 ↗</a><nav id="nav" aria-label="Chapters"></nav><button id="next">NEXT ↓</button><div id="hint">SCROLL TO EXPLORE<span id="livehint">PHOTOGRAPHIC INTRO</span></div>
 <script>
 const $=s=>document.querySelector(s),stage=$('#stage'),plates=$('#plates'),clean=$('#clean'),live=$('#live'),mode=$('#mode'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const data=[
@@ -25,7 +25,7 @@ for(const [i,d] of data.entries()){const im=new Image();im.alt=d[1]+' — '+d[2]
 function go(i){scrollTo({top:stops[clamp(i,0,4)]*Math.max(1,document.documentElement.scrollHeight-innerHeight),behavior:reduce?'auto':'smooth'});}
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(+b.dataset.go));$('#replay').onclick=()=>go(0);$('#next').onclick=()=>go(current===4?0:current+1);
 addEventListener('keydown',e=>{if(/INPUT|BUTTON|A/.test(document.activeElement.tagName))return;if(e.key==='ArrowRight'){e.preventDefault();go(current+1)}if(e.key==='ArrowLeft'){e.preventDefault();go(current-1)}});
-function ready(im){return im.complete&&im.naturalWidth?Promise.resolve():new Promise((res,rej)=>{im.addEventListener('load',res,{once:true});im.addEventListener('error',rej,{once:true})})}
+function ready(im){if(im.complete)return im.naturalWidth?Promise.resolve():Promise.reject(Error('Image unavailable: '+im.src));return new Promise((res,rej)=>{im.addEventListener('load',res,{once:true});im.addEventListener('error',rej,{once:true})})}
 // Remove the isolated product from the photograph, keeping its original typography,
 // ambient light and the photographic shadow underneath. Interpolate smooth dark backdrop
 // from the visible sides of the silhouette rather than drawing a second product.
@@ -60,10 +60,12 @@ async function prepareHeroPlate(){
 }
 prepareHeroPlate().catch(()=>{heroReady=false});
 Promise.all(images.map(ready)).catch(()=>{$('#fallback').hidden=false;$('#fallback').textContent='Some images failed to load.'});
-window.hybrid={version:'1.3',get depthReady(){return !!depthPhoto},get depthState(){return depthPhoto?.state},get liveOpacity(){return Number($('#takeover').style.opacity)},get frontOpacity(){return Number($('#front').style.opacity)},get scene(){return webgl},get progress(){return p},get chapter(){return current},get plateReady(){return plateReady},get heroReady(){return heroReady},get liveActive(){return live.classList.contains('active')},get photoOnly(){return photoEnabled},get dragX(){return dragX}};
+const cssDepthState={macro:0,ritual:0,progress:0};
+window.hybrid={version:'1.3.1',get depthReady(){return true},get depthState(){return depthPhoto?.state||cssDepthState},get depthEngine(){return depthPhoto?'gpu':'css'},get liveOpacity(){return Number($('#takeover').style.opacity)},get frontOpacity(){return Number($('#front').style.opacity)},get scene(){return webgl},get progress(){return p},get chapter(){return current},get plateReady(){return plateReady},get heroReady(){return heroReady},get liveActive(){return live.classList.contains('active')},get photoOnly(){return photoEnabled},get dragX(){return dragX}};
 window.attachDepth=api=>{depthPhoto=api;$('#front').classList.add('depth-ready');};
+window.detachDepth=()=>{depthPhoto=null;$('#front').classList.remove('depth-ready');};
 window.attachCoaster=api=>{webgl=api;mode.disabled=false;mode.textContent='LIVE 3D ON';};
-window.coasterFailed=()=>{mode.disabled=true;mode.textContent='PHOTO MODE';$('#fallback').hidden=false;};
+window.coasterFailed=()=>{webgl=null;mode.disabled=true;mode.textContent='PHOTO MODE';mode.setAttribute('aria-pressed','false');$('#fallback').hidden=false;};
 addEventListener('error',e=>{if(e.target?.tagName==='SCRIPT'&&!webgl)window.coasterFailed();},true);
 mode.onclick=()=>{photoEnabled=!photoEnabled;mode.textContent=photoEnabled?'LIVE 3D OFF':'LIVE 3D ON';mode.setAttribute('aria-pressed',String(!photoEnabled));};
 addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect();mx=clamp((e.clientX-r.left)/r.width-.5,-.5,.5);my=clamp((e.clientY-r.top)/r.height-.5,-.5,.5);if(drag){dragX=clamp(drag.x+(e.clientX-drag.sx)*.009,-1.1,1.1);dragY=clamp(drag.y+(e.clientY-drag.sy)*.009,-.8,.8)}});
@@ -95,6 +97,16 @@ function renderFrame(now){
  const macroZoom=reduce?1:1+.20*(1-ease(.755,.835,p));
  const ritualZoom=reduce?1:1+.09*(1-ease(.955,1,p));
  images[2].style.transform='scale('+touchZoom+')';images[3].style.transform='scale('+macroZoom+')';images[4].style.transform='scale('+ritualZoom+')';
+ // Default path needs only ONE WebGL context. Soft product-centred radial
+ // reveals are composed by the browser; the optional GPU shader can replace them.
+ cssDepthState.progress=p;cssDepthState.macro=macro;cssDepthState.ritual=ritual;
+ function radial(im,t,cx,cy){
+   if(reduce||depthPhoto||t<=0||t>=1){im.style.maskImage='none';im.style.webkitMaskImage='none';im.style.opacity=t;return;}
+   const edge=t*143-21;
+   const mask='radial-gradient(ellipse 100% 140% at '+cx+'% '+cy+'%,#000 '+Math.max(0,edge-12)+'%,transparent '+Math.max(.01,edge+12)+'%)';
+   im.style.maskImage=mask;im.style.webkitMaskImage=mask;im.style.opacity=ease(0,.12,t);
+ }
+ radial(images[3],macro,53,45);radial(images[4],ritual,69,63);
  const can3d=!!webgl&&plateReady&&heroReady&&!photoEnabled;
  if(can3d&&!platesDrawn){drawClean(clean,heroPlate);drawClean(clean2,objectPlate);platesDrawn=true;}
  const reveal=can3d?ease(.012,.065,p):0;
@@ -108,7 +120,7 @@ function renderFrame(now){
  if(useLive){try{webgl.draw(p,reduce?0:mx,reduce?0:my,dragX*(1-settle),dragY*(1-settle),dt);}catch(e){console.warn('Live render fallback',e);webgl=null;window.coasterFailed();takeover.style.opacity=0;live.classList.remove('active');}}
  if(depthPhoto&&touch>.002){
   try{depthPhoto.draw(p,reduce?0:mx,reduce?0:my,macro,ritual,dt,reduce);}
-  catch(e){console.warn('Depth composition fallback',e);depthPhoto=null;front.classList.remove('depth-ready');}
+  catch(e){console.warn('Depth composition fallback',e);window.detachDepth();}
  }
  $('#hint').firstChild.nodeValue=useLive?'DRAG TO ROTATE · SCROLL TO EXPLORE':'SCROLL TO EXPLORE';$('#livehint').textContent=useLive?'CONTINUOUS LIVE 3D':'CINEMATIC DEPTH / 0'+(idx+1);
  $('#replay').classList.toggle('on',idx===4);$('#progress').style.width=(wanted*100)+'%';requestAnimationFrame(renderFrame);
@@ -121,7 +133,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 try{
-const renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});renderer.setClearColor(0x000000,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;live.append(renderer.domElement);
+const renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});renderer.setClearColor(0x000000,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;live.append(renderer.domElement);renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();window.coasterFailed();},{once:true});
 const scene=new T.Scene();const camera=new T.PerspectiveCamera(35,16/9,.1,150);const root=new T.Group();scene.add(root);
 const pmrem=new T.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.05).texture;scene.environmentIntensity=.33;room.dispose();
 const key=new T.DirectionalLight(0xffe1bc,2.05);key.position.set(-6,12,-8);scene.add(key,new T.HemisphereLight(0xffe6c9,0x51301b,.48));
@@ -163,7 +175,7 @@ window.attachCoaster({renderer,scene,camera,root,product,draw});
 // Upgrade the product material with the actual licensed high-resolution cork maps.
 (async()=>{try{const loader=new T.TextureLoader(),base='../assets/hero-v11/',[color,normal,rough]=await Promise.all(['cork-color.jpg','cork-normal.jpg','cork-rough.jpg'].map(n=>loader.loadAsync(base+n)));
 function inherit(old,source,isColor){const t=old?old.clone():source.clone();t.source=new T.Source(source.image);t.flipY=false;t.colorSpace=isColor?T.SRGBColorSpace:T.NoColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;return t;}
-for(const m of mats){m.map=inherit(m.map,color,true);m.normalMap=inherit(m.normalMap||m.map,normal,false);m.roughnessMap=inherit(m.roughnessMap||m.map,rough,false);m.normalScale.set(.8,.8);m.needsUpdate=true;}
+for(const m of mats){m.map=inherit(m.map,color,true);m.normalMap=inherit(m.normalMap||m.map,normal,false);m.roughnessMap=inherit(m.roughnessMap||m.map,rough,false);if(m.normalScale)m.normalScale.set(.8,.8);m.needsUpdate=true;}
 }catch(e){console.warn('Using original GLB cork maps',e);}})();
 
 }catch(e){console.warn('Live 3D unavailable',e);window.coasterFailed();}
@@ -171,8 +183,10 @@ for(const m of mats){m.map=inherit(m.map,color,true);m.normalMap=inherit(m.norma
 <script type="module">
 import * as T from 'three';
 try{
+// The second WebGL context is opt-in; normal visitors use the robust CSS path.
+if(new URLSearchParams(location.search).get('gpu')!=='1')throw new Error('Optional GPU photo compositor disabled');
 await Promise.all(images.slice(2).map(ready));
-const mount=$('#depthPhoto'),r=new T.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});r.setPixelRatio(Math.min(devicePixelRatio,1.5));mount.append(r.domElement);r.domElement.style.cssText='width:100%;height:100%;display:block';
+const mount=$('#depthPhoto'),r=new T.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});r.setPixelRatio(Math.min(devicePixelRatio,1.5));mount.append(r.domElement);r.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();window.detachDepth();},{once:true});r.domElement.style.cssText='width:100%;height:100%;display:block';
 const tex=images.slice(2).map(im=>{const t=new T.Texture(im);t.minFilter=T.LinearFilter;t.magFilter=T.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return t});
 const u={a:{value:tex[0]},b:{value:tex[1]},c:{value:tex[2]},progress:{value:0},macroMix:{value:0},ritualMix:{value:0},mouse:{value:new T.Vector2()},motion:{value:1}};
 const mat=new T.ShaderMaterial({uniforms:u,depthTest:false,depthWrite:false,toneMapped:false,
@@ -222,6 +236,8 @@ void main(){
 }`});
 const scene=new T.Scene();scene.add(new T.Mesh(new T.PlaneGeometry(2,2),mat));const camera=new T.Camera();function resize(){const rect=stage.getBoundingClientRect();r.setSize(Math.max(1,Math.round(rect.width)),Math.max(1,Math.round(rect.height)),false);}new ResizeObserver(resize).observe(stage);resize();let mx2=0,my2=0;const state={macro:0,ritual:0,progress:0};
 function draw(p,x,y,m,n,dt,reduceMotion){const a=1-Math.exp(-dt*7);mx2=mix(mx2,x,a);my2=mix(my2,y,a);u.progress.value=p;u.macroMix.value=m;u.ritualMix.value=n;u.mouse.value.set(mx2,my2);u.motion.value=reduceMotion?0:1;state.macro=m;state.ritual=n;state.progress=p;r.render(scene,camera);}
-draw(0,0,0,0,0,.016,true);window.attachDepth({draw,state,renderer:r});
-}catch(e){console.warn('Depth photography unavailable; retaining original photos',e);}
+draw(0,0,0,0,0,.016,true);
+if(r.getContext().isContextLost()||r.info.programs.some(p=>p.diagnostics?.runnable===false)){r.dispose();throw Error('GPU shader unavailable');}
+window.attachDepth({draw,state,renderer:r});
+}catch(e){window.detachDepth();if(new URLSearchParams(location.search).get('gpu')==='1')console.warn('Depth photography unavailable; retaining CSS transitions',e);}
 </script></body></html>
