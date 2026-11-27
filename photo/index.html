@@ -9,7 +9,7 @@
 <div class="utility"><button id="open">PODKLADY / ASSETS</button><a href="../v11/">LIVE 3D ↗</a></div>
 <main id="chapters"></main>
 <nav class="nav" aria-label="Kapitoly" id="nav"></nav><button class="next" id="next">DALŠÍ ↓</button>
-<div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="sheet"><h2 id="dialog-title">Pět schválených vizuálů</h2><p>Vyber původní obrázky v pořadí Workshop, Object, Touch, Material, Ritual. Náhled je lokální, soubory se nikam neodesílají. Publikované obrázky stránka načítá automaticky.</p><div id="slots"></div><div class="actions"><button id="close">Zobrazit náhled</button><button id="clear">Obnovit soubory z webu</button></div><p id="notice" role="status"></p></div></div>
+<div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden><div class="sheet"><h2 id="dialog-title">Pět schválených vizuálů</h2><p>Vyber původní obrázky v pořadí Workshop, Object, Touch, Material, Ritual. Náhled je lokální, soubory se nikam neodesílají. Publikované obrázky stránka načítá automaticky.</p><label style="display:block;padding:14px 0;border-top:1px solid #f5e8d344">Vyber všech 5 originálů najednou (bez přejmenování)<input id="batch" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:block;margin-top:8px;width:100%"></label><div id="slots"></div><p><a href="https://github.com/mara420/Oryzo-study/upload/main/photo/assets" target="_blank" rel="noopener">Nahrát všech 5 originálů na GitHub ↗</a></p><div class="actions"><button id="close">Zobrazit náhled</button><button id="clear">Obnovit soubory z webu</button></div><p id="notice" role="status"></p></div></div>
 <script>
 const chapters=[
 {file:'01-workshop.png',title:'Coaster.',description:'The beauty of the ordinary.',alt:'Fotorealistický návrh pracovního stolu, korkový podtácek na zelené řezací podložce.'},
@@ -33,6 +33,15 @@ for(const [i,c] of chapters.entries()){
  const btn=document.createElement('button');btn.textContent=String(i+1).padStart(2,'0');btn.setAttribute('aria-label',c.title);btn.onclick=()=>go(i);nav.append(btn);buttons.push(btn);
  const row=document.createElement('label');row.className='slot';row.textContent=(i+1)+' / '+c.title;const file=document.createElement('input');file.type='file';file.accept='image/*';file.onchange=()=>{const f=file.files[0];if(!f)return;if(urls[i])URL.revokeObjectURL(urls[i]);urls[i]=URL.createObjectURL(f);img.src=urls[i];$('#notice').textContent='Vybráno '+urls.filter(Boolean).length+' / 5 obrázků pro lokální náhled.'};row.append(file);slots.append(row);
 }
+const originalSizes=[2665281,1968632,2215514,2039068,1989872];
+$('#batch').onchange=()=>{
+ const files=Array.from($('#batch').files);let matched=0,unmatched=0;
+ for(const f of files){let i=chapters.findIndex(c=>c.file===f.name);if(i<0)i=originalSizes.indexOf(f.size);
+ if(i<0){unmatched++;continue}
+ if(urls[i])URL.revokeObjectURL(urls[i]);urls[i]=URL.createObjectURL(f);images[i].src=urls[i];matched++;
+ }
+ $('#notice').textContent='Rozpoznáno '+matched+' / '+files.length+' obrázků. '+(unmatched?'U upravených souborů vyber správnou kapitolu ručně.':'Pořadí bylo přiřazeno automaticky.');
+};
 function update(){const y=scrollY,range=Math.max(1,document.documentElement.scrollHeight-innerHeight);$('#progress').style.width=(Math.min(1,y/range)*100)+'%';let index=0;for(let i=0;i<sections.length;i++)if(sections[i].getBoundingClientRect().top<innerHeight*.48)index=i;current=index;buttons.forEach((b,i)=>b.setAttribute('aria-current',String(i===index)));$('#next').textContent=index===4?'ZNOVU ↑':'DALŠÍ ↓';for(let i=0;i<sections.length-1;i++){const rect=sections[i].getBoundingClientRect();const t=Math.max(0,Math.min(1,(innerHeight-rect.bottom)/(.4*innerHeight)));sections[i].querySelector('.shade').style.opacity=reduce?0:t*.55}}
 let scheduled=false;function tick(){if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;update()})}}
 addEventListener('scroll',tick,{passive:true});addEventListener('resize',tick);update();$('#next').onclick=()=>go(current===4?0:current+1);
