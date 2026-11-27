@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>COASTER. — Cinematic depth</title>
+<style>
+*{box-sizing:border-box}html{scroll-behavior:auto}body{margin:0;background:#130e09;color:#f4e5cf;font:15px/1.4 Arial,Helvetica,sans-serif;overflow-x:hidden}#track{height:780vh}#viewport{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:#130e09}#stage{position:relative;width:min(100vw,177.77778svh);aspect-ratio:16/9;max-height:100svh;overflow:hidden;isolation:isolate;background:#18110b;box-shadow:0 0 100px #0006}#plates,#plates img,#clean,#live,#curtain{position:absolute;inset:0;width:100%;height:100%}#plates img,#clean{object-fit:fill;pointer-events:none;opacity:0;will-change:opacity,transform;transform-origin:58% 48%}#plates img:first-child{opacity:1}#clean{z-index:2}#live{z-index:3;pointer-events:none;opacity:0}#live canvas{width:100%;height:100%;display:block;touch-action:pan-y}#live.active{pointer-events:auto}#curtain{z-index:4;opacity:0;background:#160e08;pointer-events:none}#grain{position:absolute;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at center,transparent 55%,#0c07042e 100%);opacity:.25}button,a{font:inherit;color:inherit}button{cursor:pointer}.hit{position:absolute;top:2.5%;height:6.5%;padding:0;border:0;background:transparent;cursor:pointer;z-index:6}.hit:focus-visible{outline:2px solid #f4e5cf}.hit:hover{border-bottom:1px solid #f4e5cf}.product{left:70%;width:6.6%}.materials{left:77%;width:7.2%}.story{left:84.5%;width:6.4%}.contact{left:91.5%;width:7%}#nav{position:fixed;z-index:10;right:24px;bottom:24px;display:flex;gap:5px;padding:7px;border:1px solid #f4e5cf40;border-radius:40px;background:#17110bbd;backdrop-filter:blur(10px)}#nav button{width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#e2c9ad;font:11px monospace}#nav button[aria-current=true]{background:#f4e5cf;color:#1a120b}#nav button:focus-visible,#mode:focus-visible,#next:focus-visible{outline:2px solid #d9ad7b;outline-offset:4px}#mode{position:fixed;z-index:11;top:20px;left:50%;transform:translateX(-50%);padding:8px 13px;border-radius:22px;border:1px solid #f4e5cf55;background:#17110bad;font:10px/1.3 monospace;letter-spacing:.08em;white-space:nowrap}#mode[aria-pressed=true]{background:#f4e5cf;color:#20160e}#mode:disabled{opacity:.5;cursor:default}#next{position:fixed;z-index:10;left:24px;bottom:24px;padding:10px 16px;border:1px solid #f4e5cf55;border-radius:30px;background:#17110bbd;font:10px monospace;letter-spacing:.06em}#progress{position:fixed;top:0;left:0;height:2px;background:#f4e5cf;z-index:12;width:0}#hint{position:fixed;bottom:27px;left:50%;transform:translateX(-50%);text-align:center;z-index:8;font:10px monospace;color:#f4e5cfcf;letter-spacing:.07em;pointer-events:none;white-space:nowrap}#hint span{display:block;color:#d2ad82;font-size:9px;margin-top:4px}#mobileCopy{display:none}#fallback{position:absolute;z-index:5;left:5%;bottom:6%;max-width:50%;background:#21160ee0;padding:10px;font:11px monospace}#fallback[hidden]{display:none}.sr{position:absolute;clip-path:inset(50%);height:1px;width:1px;overflow:hidden}#replay{position:absolute;z-index:6;left:4%;top:63%;width:16%;height:8%;background:transparent;border:0;display:none}#replay.on{display:block}#credit{position:fixed;right:26px;top:20px;font:9px monospace;color:#e9cbaa;z-index:11;text-decoration:none;background:#17110b88;padding:5px;border-radius:4px}
+@media(max-aspect-ratio:4/5){#viewport{display:flex;flex-direction:column;justify-content:center;gap:22px;padding:76px 0 110px}#stage{width:100%;max-height:none;height:auto;flex:none}#mobileCopy{display:block;width:87%;min-height:112px}#mobileCopy h1{font-size:clamp(27px,8vw,45px);line-height:1;letter-spacing:-.05em;margin:0 0 10px}#mobileCopy p{margin:0;color:#d5bda5;font-size:14px}#nav{right:12px;bottom:15px;padding:5px;gap:3px}#nav button{width:30px;height:30px}#next{left:12px;bottom:15px;padding:10px 12px}#hint{bottom:66px;font-size:9px}#mode{top:16px}#credit{top:49px;right:14px}.hit{display:none}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/* One composite: opaque photographs underneath, a single continuous live product, then photographic close-ups. */
+#takeover,#front,#clean2,#contactShadow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#takeover{z-index:2;opacity:0;isolation:isolate}#clean,#clean2{z-index:0;opacity:1;object-fit:fill;transform:none}#clean2{opacity:0}#contactShadow{z-index:1;inset:auto;width:29%;height:12%;border-radius:50%;background:radial-gradient(ellipse,#100a0570,transparent 72%);transform:translate(-50%,-50%);filter:blur(5px);opacity:0}#live{z-index:2;opacity:1}#live.active{pointer-events:auto}#front{z-index:4;opacity:0;overflow:hidden;isolation:isolate}#front img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;will-change:opacity,transform;transform-origin:50% 45%;opacity:0}#front img:first-child{opacity:1}#curtain{display:none}#grain{z-index:5;opacity:.12}#mode{font-size:9px;padding:7px 12px;background:#17110b85}#mode[aria-pressed=true]{background:#17110b85;color:#f4e5cf;border-color:#f4e5cf55}#credit{opacity:.7}#track{height:920vh}
+#depthPhoto{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;display:none}#front.depth-ready #depthPhoto{display:block}#front.depth-ready img{visibility:hidden}#track{height:840vh}#stage{container-type:inline-size}#contactShadow{filter:blur(4px)}#mode{opacity:.8}#mode:hover{opacity:1}#nav{background:#17110b66;border-color:#f4e5cf33}#hint{font-size:9px}#grain{opacity:.2}#next{background:#17110b77}#credit{font-size:9px}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"}}</script></head>
+<body><main id="track" aria-label="Five scroll-driven chapters"><h1 class="sr">COASTER. A photographic and live 3D study</h1></main><div id="viewport"><div id="stage"><div id="plates"></div><div id="takeover"><canvas id="clean" aria-hidden="true"></canvas><canvas id="clean2" aria-hidden="true"></canvas><div id="contactShadow"></div><div id="live" aria-label="Live 3D coaster"></div></div><div id="front"><div id="depthPhoto" aria-hidden="true"></div></div><div id="curtain"></div><div id="grain"></div><div id="fallback" hidden>Photo mode · WebGL unavailable</div><button class="hit product" data-go="1" aria-label="Product"></button><button class="hit materials" data-go="3" aria-label="Materials"></button><button class="hit story" data-go="2" aria-label="Touch"></button><button class="hit contact" data-go="4" aria-label="Ritual"></button><button id="replay" aria-label="Experience again"></button></div><div id="mobileCopy"><h1></h1><p></p></div></div><div id="progress"></div><button id="mode" aria-pressed="true" disabled>LOADING 3D</button><a id="credit" href="../flow/">V1.2 ↗</a><nav id="nav" aria-label="Chapters"></nav><button id="next">NEXT ↓</button><div id="hint">SCROLL TO EXPLORE<span id="livehint">PHOTOGRAPHIC INTRO</span></div>
+<script>
+const $=s=>document.querySelector(s),stage=$('#stage'),plates=$('#plates'),clean=$('#clean'),live=$('#live'),mode=$('#mode'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const data=[
+['01-workshop.png','Coaster.','The beauty of the ordinary.'],
+['02-object.png','Nothing to add.','Pure cork. Nothing else.'],
+['03-touch.png','Made to be held.','A study in human scale and touch.'],
+['04-material.png','Nature, up close.','The natural character of cork, revealed in detail.'],
+['05-ritual.png','Make time for the little things.','Simple, thoughtful pieces for a more peaceful everyday.']];
+const stops=[0,.32,.55,.755,.96],images=[],nav=[];
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t)},mix=(a,b,t)=>a+(b-a)*t;
+let current=0,p=0,last=performance.now(),mx=0,my=0,photoEnabled=false,webgl=null,depthPhoto=null,dragX=0,dragY=0,drag=null,plateReady=false,heroReady=false;
+const source='../photo/assets/';
+for(const [i,d] of data.entries()){const im=new Image();im.alt=d[1]+' — '+d[2];im.decoding='async';im.src=source+d[0];(i<2?plates:$('#front')).insertBefore(im,i<2?null:$('#depthPhoto'));images.push(im);const b=document.createElement('button');b.textContent='0'+(i+1);b.setAttribute('aria-label',d[1]);b.onclick=()=>go(i);$('#nav').append(b);nav.push(b);}
+function go(i){scrollTo({top:stops[clamp(i,0,4)]*Math.max(1,document.documentElement.scrollHeight-innerHeight),behavior:reduce?'auto':'smooth'});}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(+b.dataset.go));$('#replay').onclick=()=>go(0);$('#next').onclick=()=>go(current===4?0:current+1);
+addEventListener('keydown',e=>{if(/INPUT|BUTTON|A/.test(document.activeElement.tagName))return;if(e.key==='ArrowRight'){e.preventDefault();go(current+1)}if(e.key==='ArrowLeft'){e.preventDefault();go(current-1)}});
+function ready(im){return im.complete&&im.naturalWidth?Promise.resolve():new Promise((res,rej)=>{im.addEventListener('load',res,{once:true});im.addEventListener('error',rej,{once:true})})}
+// Remove the isolated product from the photograph, keeping its original typography,
+// ambient light and the photographic shadow underneath. Interpolate smooth dark backdrop
+// from the visible sides of the silhouette rather than drawing a second product.
+let objectPlate,heroPlate;
+async function prepareObjectPlate(){await ready(images[1]);const im=images[1],c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);const image=ctx.getImageData(0,0,c.width,c.height),w=c.width,h=c.height,d=image.data,src=new Uint8ClampedArray(d);
+const cx=.597*w,cy=.481*h,rx=.205*w,ry=.373*h;
+for(let y=Math.max(0,Math.floor(cy-ry));y<Math.min(h,Math.ceil(cy+ry));y++){
+ const dy=(y-cy)/ry;if(Math.abs(dy)>=1)continue;const half=rx*Math.sqrt(1-dy*dy),lo=Math.max(0,Math.floor(cx-half)),hi=Math.min(w-1,Math.ceil(cx+half));if(hi<=lo)continue;
+ const a=Math.max(0,lo-Math.round(w*.018)),b=Math.min(w-1,hi+Math.round(w*.018));
+ for(let x=lo;x<=hi;x++){const r=Math.hypot((x-cx)/rx,dy),edge=1-ease(.94,1,r),t=(x-a)/Math.max(1,b-a),i=(y*w+x)*4,ia=(y*w+a)*4,ib=(y*w+b)*4;for(let k=0;k<3;k++)d[i+k]=mix(src[i+k],mix(src[ia+k],src[ib+k],t),edge);}
+}
+ctx.putImageData(image,0,0);objectPlate=c;plateReady=true;}
+prepareObjectPlate().catch(()=>{plateReady=false});
+// The original hero remains the exact still image at rest. A short live reveal
+// uses a reconstructed local cutting-mat patch under the moving coaster.
+async function prepareHeroPlate(){
+ await ready(images[0]);const im=images[0],c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;
+ const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);const pixels=ctx.getImageData(0,0,c.width,c.height),w=c.width,h=c.height,d=pixels.data,src=new Uint8ClampedArray(d);
+ const cx=.559*w,cy=.481*h,rx=.166*w,ry=.290*h;
+ const cell=.030*w,stepY=.052*h;
+ for(let y=Math.max(0,Math.floor(cy-ry));y<Math.min(h,Math.ceil(cy+ry));y++)for(let x=Math.max(0,Math.floor(cx-rx));x<Math.min(w,Math.ceil(cx+rx));x++){
+  const r=Math.hypot((x-cx)/rx,(y-cy)/ry);if(r>=1)continue;
+  // Tile real green mat pixels from an unobstructed upper section, aligned
+  // approximately with the photographed perspective. This is not a 3D scan.
+  const mod=(v,n)=>((v%n)+n)%n;
+  const sy=Math.floor(.112*h+mod(y+.045*x-.112*h,stepY));
+  const sx=Math.floor(.465*w+mod(x-.11*(y-sy)-.465*w,cell*3));
+  const j=(sy*w+sx)*4,i=(y*w+x)*4,alpha=1-ease(.93,1,r);
+  for(let k=0;k<3;k++)d[i+k]=mix(src[i+k],src[j+k]*.90,alpha);
+ }
+ ctx.putImageData(pixels,0,0);heroPlate=c;heroReady=true;
+}
+prepareHeroPlate().catch(()=>{heroReady=false});
+Promise.all(images.map(ready)).catch(()=>{$('#fallback').hidden=false;$('#fallback').textContent='Some images failed to load.'});
+window.hybrid={version:'1.3',get depthReady(){return !!depthPhoto},get depthState(){return depthPhoto?.state},get liveOpacity(){return Number($('#takeover').style.opacity)},get frontOpacity(){return Number($('#front').style.opacity)},get scene(){return webgl},get progress(){return p},get chapter(){return current},get plateReady(){return plateReady},get heroReady(){return heroReady},get liveActive(){return live.classList.contains('active')},get photoOnly(){return photoEnabled},get dragX(){return dragX}};
+window.attachDepth=api=>{depthPhoto=api;$('#front').classList.add('depth-ready');};
+window.attachCoaster=api=>{webgl=api;mode.disabled=false;mode.textContent='LIVE 3D ON';};
+window.coasterFailed=()=>{mode.disabled=true;mode.textContent='PHOTO MODE';$('#fallback').hidden=false;};
+addEventListener('error',e=>{if(e.target?.tagName==='SCRIPT'&&!webgl)window.coasterFailed();},true);
+mode.onclick=()=>{photoEnabled=!photoEnabled;mode.textContent=photoEnabled?'LIVE 3D OFF':'LIVE 3D ON';mode.setAttribute('aria-pressed',String(!photoEnabled));};
+addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect();mx=clamp((e.clientX-r.left)/r.width-.5,-.5,.5);my=clamp((e.clientY-r.top)/r.height-.5,-.5,.5);if(drag){dragX=clamp(drag.x+(e.clientX-drag.sx)*.009,-1.1,1.1);dragY=clamp(drag.y+(e.clientY-drag.sy)*.009,-.8,.8)}});
+live.addEventListener('pointerdown',e=>{if(!live.classList.contains('active'))return;drag={sx:e.clientX,sy:e.clientY,x:dragX,y:dragY};live.setPointerCapture(e.pointerId);});
+live.addEventListener('pointerup',()=>drag=null);live.addEventListener('pointercancel',()=>drag=null);live.addEventListener('dblclick',()=>{dragX=dragY=0;});
+let platesDrawn=false;
+const clean2=$('#clean2'),takeover=$('#takeover'),front=$('#front'),contactShadow=$('#contactShadow');
+function drawClean(target,source){target.width=source.width;target.height=source.height;target.getContext('2d').drawImage(source,0,0);}
+function renderFrame(now){
+ const dt=Math.min(.12,Math.max(.001,(now-last)/1000));last=now;
+ const wanted=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight));
+ p=reduce?wanted:mix(p,wanted,1-Math.exp(-dt/.115));if(Math.abs(p-wanted)<.00004)p=wanted;
+ // All layers and the camera use the same progress. Crossfades use source-over
+ // compositing on an opaque base, rather than fading both backgrounds to black.
+ const studio=ease(.115,.275,p),touch=ease(.43,.53,p),macro=ease(.635,.755,p),ritual=ease(.835,.955,p);
+ const idx=p<.195?0:p<.48?1:p<.695?2:p<.895?3:4;
+ if(idx!==current||!$('#mobileCopy h1').textContent){current=idx;$('#mobileCopy h1').textContent=data[idx][1];$('#mobileCopy p').textContent=data[idx][2];nav.forEach((b,i)=>b.setAttribute('aria-current',String(i===idx)));$('#next').textContent=idx===4?'REPLAY ↑':'NEXT ↓';}
+ images[0].style.opacity=1;images[1].style.opacity=studio;
+ images[2].style.opacity=1;images[3].style.opacity=macro;images[4].style.opacity=ritual;
+ front.style.opacity=touch;
+ const approach=reduce?0:ease(.035,.18,p),retreat=reduce?0:ease(.18,.29,p);
+ const heroScale=1+.12*approach-.045*retreat;
+ const heroTransform='scale('+heroScale+') translate('+(-1.5*approach)+'%,'+(1.4*approach)+'%)';
+ images[0].style.transform=heroTransform;clean.style.transform=heroTransform;
+ const studioScale=1+(reduce?0:.045*ease(.275,.43,p));
+ images[1].style.transform='scale('+studioScale+')';clean2.style.transform=images[1].style.transform;
+ // Calm push-in through the human-scale photograph, then a pull-back from macro.
+ const touchZoom=reduce?1:1+.12*ease(.53,.635,p);
+ const macroZoom=reduce?1:1+.20*(1-ease(.755,.835,p));
+ const ritualZoom=reduce?1:1+.09*(1-ease(.955,1,p));
+ images[2].style.transform='scale('+touchZoom+')';images[3].style.transform='scale('+macroZoom+')';images[4].style.transform='scale('+ritualZoom+')';
+ const can3d=!!webgl&&plateReady&&heroReady&&!photoEnabled;
+ if(can3d&&!platesDrawn){drawClean(clean,heroPlate);drawClean(clean2,objectPlate);platesDrawn=true;}
+ const reveal=can3d?ease(.012,.065,p):0;
+ // The SAME renderer and geometry remain visible from workshop through studio.
+ // The touch photograph covers the complete composite; no second 3D hand.
+ takeover.style.opacity=reveal;clean2.style.opacity=studio;
+ const liveVisible=reveal*(1-touch),useLive=liveVisible>.003;
+ live.classList.toggle('active',liveVisible>.93);live.style.cursor=drag?'grabbing':'grab';
+ const settle=ease(.385,.475,p);if(!drag){const release=!useLive||settle>.01?1-Math.exp(-dt*(3+settle*9)):0;dragX=mix(dragX,0,release);dragY=mix(dragY,0,release);}
+ contactShadow.style.left=(mix(.559,.597,studio)*100)+'%';contactShadow.style.top=(72-studio*7)+'%';contactShadow.style.opacity=(1-studio)*.38;contactShadow.style.transform='translate(-50%,-50%) scale('+mix(1,.65,approach)+')';
+ if(useLive){try{webgl.draw(p,reduce?0:mx,reduce?0:my,dragX*(1-settle),dragY*(1-settle),dt);}catch(e){console.warn('Live render fallback',e);webgl=null;window.coasterFailed();takeover.style.opacity=0;live.classList.remove('active');}}
+ if(depthPhoto&&touch>.002){
+  try{depthPhoto.draw(p,reduce?0:mx,reduce?0:my,macro,ritual,dt,reduce);}
+  catch(e){console.warn('Depth composition fallback',e);depthPhoto=null;front.classList.remove('depth-ready');}
+ }
+ $('#hint').firstChild.nodeValue=useLive?'DRAG TO ROTATE · SCROLL TO EXPLORE':'SCROLL TO EXPLORE';$('#livehint').textContent=useLive?'CONTINUOUS LIVE 3D':'CINEMATIC DEPTH / 0'+(idx+1);
+ $('#replay').classList.toggle('on',idx===4);$('#progress').style.width=(wanted*100)+'%';requestAnimationFrame(renderFrame);
+}
+requestAnimationFrame(renderFrame);
+</script>
+<script type="module">
+import * as T from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+try{
+const renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});renderer.setClearColor(0x000000,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;live.append(renderer.domElement);
+const scene=new T.Scene();const camera=new T.PerspectiveCamera(35,16/9,.1,150);const root=new T.Group();scene.add(root);
+const pmrem=new T.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.05).texture;scene.environmentIntensity=.33;room.dispose();
+const key=new T.DirectionalLight(0xffe1bc,2.05);key.position.set(-6,12,-8);scene.add(key,new T.HemisphereLight(0xffe6c9,0x51301b,.48));
+const rim=new T.DirectionalLight(0xffd4a0,1.1);rim.position.set(5,6,8);scene.add(rim);
+const g=await new GLTFLoader().loadAsync('../assets/workshop-v04/workshop.glb'),product=g.scene.getObjectByName('CoasterProduct');if(!product)throw Error('Missing original model');
+g.scene.updateMatrixWorld(true);const box=new T.Box3().setFromObject(product),center=box.getCenter(new T.Vector3()),size=box.getSize(new T.Vector3());root.attach(product);product.position.sub(center);const scale=9/Math.max(size.x,size.z);root.scale.setScalar(scale);
+const mats=new Set();product.traverse(o=>{if(o.isMesh){for(const m of [].concat(o.material)){mats.add(m);m.roughness=.96;m.metalness=0;m.envMapIntensity=.18;m.color.set('#b99a79');if(m.normalScale)m.normalScale.set(.65,.65);m.needsUpdate=true;}}});
+function resize(){const r=stage.getBoundingClientRect();renderer.setSize(Math.max(1,Math.round(r.width)),Math.max(1,Math.round(r.height)),false);}new ResizeObserver(resize).observe(stage);resize();
+new RGBELoader().loadAsync('../assets/workshop-v04/studio.hdr').then(h=>{const old=scene.environment;scene.environment=pmrem.fromEquirectangular(h).texture;old.dispose();h.dispose();pmrem.dispose()}).catch(()=>pmrem.dispose());
+let yaw=0,pitch=0;
+// Camera poses are all expressed in the same scene coordinates.
+const poses=[
+ // timeline, screen x/y, view height, elevation, tilt, yaw, roll, camera distance
+ [0,.559,.481,16.45,1.55,0,0,0,42],
+ [.065,.559,.481,16.45,1.55,0,0,0,42],
+ [.12,.573,.467,15.2,1.31,.14,.18,-.05,31],
+ [.19,.59,.44,11.7,.99,.32,.36,-.11,22],
+ [.255,.608,.47,12.1,1.36,.12,.52,-.035,26],
+ [.32,.597,.481,12.85,1.48,.04,.64,-.02,32],
+ [.385,.61,.47,11.8,1.21,.18,.87,.07,22],
+ [.465,.514,.446,16.4,1.50,0,.22,0,38],
+ [.53,.500,.450,16.4,1.52,0,0,0,42]
+];
+// Monotonic Hermite interpolation: continuous velocity across intermediate keys,
+// without overshooting camera/scale bounds. Scroll is completely reversible.
+function tangent(i,j){if(i===0||i===poses.length-1)return 0;const a=poses[i-1],b=poses[i],c=poses[i+1],l=(b[j]-a[j])/(b[0]-a[0]),r=(c[j]-b[j])/(c[0]-b[0]);return l*r<=0?0:2*l*r/(l+r);}
+function poseAt(p){let i=0;while(i<poses.length-2&&p>poses[i+1][0])i++;const a=poses[i],b=poses[i+1],h=b[0]-a[0],t=clamp((p-a[0])/h),t2=t*t,t3=t2*t;return a.slice(1).map((v,j)=>(2*t3-3*t2+1)*v+(t3-2*t2+t)*h*tangent(i,j+1)+(-2*t3+3*t2)*b[j+1]+(t3-t2)*h*tangent(i+1,j+1));}
+function draw(p,x,y,dx,dy,dt){
+ const [cx,cy,height,elevation,tilt,turn,roll,distance]=poseAt(p);
+ const rest=1-ease(.385,.475,p),a=1-Math.exp(-Math.max(.001,dt)*9);
+ yaw=T.MathUtils.lerp(yaw,dx+x*.26*rest,a);pitch=T.MathUtils.lerp(pitch,dy+y*.20*rest,a);
+ root.rotation.set(tilt+pitch,turn+yaw,roll);
+ camera.position.set(0,Math.sin(elevation)*distance,Math.cos(elevation)*distance);camera.up.set(0,1,0);camera.lookAt(0,0,0);
+ camera.fov=T.MathUtils.radToDeg(2*Math.atan(height/(2*distance)));camera.aspect=16/9;camera.updateProjectionMatrix();
+ camera.projectionMatrix.elements[8]=1-2*cx;camera.projectionMatrix.elements[9]=2*cy-1;camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+ const studio=ease(.115,.275,p);key.intensity=mix(1.85,2.2,studio);rim.intensity=mix(.7,1.3,studio);key.position.set(mix(-5,-7,studio),12,mix(-7,-4,studio));renderer.render(scene,camera);
+}
+window.attachCoaster({renderer,scene,camera,root,product,draw});
+// Upgrade the product material with the actual licensed high-resolution cork maps.
+(async()=>{try{const loader=new T.TextureLoader(),base='../assets/hero-v11/',[color,normal,rough]=await Promise.all(['cork-color.jpg','cork-normal.jpg','cork-rough.jpg'].map(n=>loader.loadAsync(base+n)));
+function inherit(old,source,isColor){const t=old?old.clone():source.clone();t.source=new T.Source(source.image);t.flipY=false;t.colorSpace=isColor?T.SRGBColorSpace:T.NoColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;return t;}
+for(const m of mats){m.map=inherit(m.map,color,true);m.normalMap=inherit(m.normalMap||m.map,normal,false);m.roughnessMap=inherit(m.roughnessMap||m.map,rough,false);m.normalScale.set(.8,.8);m.needsUpdate=true;}
+}catch(e){console.warn('Using original GLB cork maps',e);}})();
+
+}catch(e){console.warn('Live 3D unavailable',e);window.coasterFailed();}
+</script>
+<script type="module">
+import * as T from 'three';
+try{
+await Promise.all(images.slice(2).map(ready));
+const mount=$('#depthPhoto'),r=new T.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});r.setPixelRatio(Math.min(devicePixelRatio,1.5));mount.append(r.domElement);r.domElement.style.cssText='width:100%;height:100%;display:block';
+const tex=images.slice(2).map(im=>{const t=new T.Texture(im);t.minFilter=T.LinearFilter;t.magFilter=T.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return t});
+const u={a:{value:tex[0]},b:{value:tex[1]},c:{value:tex[2]},progress:{value:0},macroMix:{value:0},ritualMix:{value:0},mouse:{value:new T.Vector2()},motion:{value:1}};
+const mat=new T.ShaderMaterial({uniforms:u,depthTest:false,depthWrite:false,toneMapped:false,
+vertexShader:`varying vec2 uv0;void main(){uv0=uv;gl_Position=vec4(position.xy,0.,1.);}`,
+fragmentShader:`
+uniform sampler2D a,b,c;uniform float progress,macroMix,ritualMix,motion;uniform vec2 mouse;varying vec2 uv0;
+float E(float a,float b,float x){return smoothstep(a,b,x);}
+float oval(vec2 p,vec2 center,vec2 radii){return 1.-smoothstep(.67,1.14,length((p-center)/radii));}
+// Authored depth weights: tabletop vs near hand, cork rim and cup.
+// No inferred/metric depth is claimed. Preserve photographed typography.
+float protectedType(vec2 q,float scene){
+ float left=1.-E(.39,.50,q.x);
+ if(scene>1.5)left=1.-E(.46,.53,q.x);
+ float top=1.-E(.055,.12,q.y);
+ float bottom=E(.89,.96,q.y)*(1.-E(.24,.35,q.x));
+ return max(max(left,top),bottom);
+}
+vec3 shot(sampler2D image,vec2 q,float scene,float zoom,vec2 center,vec2 drift){
+ float depth;
+ if(scene<.5)depth=max(oval(q,vec2(.50,.45),vec2(.18,.33)),oval(q,vec2(.76,.65),vec2(.30,.40))*.9);
+ else if(scene<1.5)depth=E(.38,.76,q.x+.30*q.y);
+ else depth=max(oval(q,vec2(.69,.46),vec2(.24,.38)),oval(q,vec2(.13,.88),vec2(.27,.27))*.8);
+ float keep=protectedType(q,scene);
+ // Inverse projection with locally different displacement, bounded so edges remain valid.
+ float v=motion*(1.-keep);vec2 shift=(mouse*vec2(.027,.035)+drift)*(.18+.82*depth)*v;
+ vec2 s=center+(q-center)/(1.+zoom*(.23+.77*depth)*v)+shift;
+ s=clamp(s,vec2(.001),vec2(.999));
+ return texture2D(image,vec2(s.x,1.-s.y)).rgb;
+}
+float radial(float t,vec2 q,vec2 center,float range){
+ float d=length((q-center)*vec2(1.,.70))/range;
+ float edge=mix(-.23,1.23,t);
+ float m=1.-smoothstep(edge-.17,edge+.17,d);
+ // Text follows a short conventional dissolve rather than bending along the wipe.
+ return mix(m,E(.32,.68,t),protectedType(q,0.)*.85);
+}
+void main(){
+ vec2 q=vec2(uv0.x,1.-uv0.y);
+ float push=E(.53,.635,progress),pull=E(.755,.835,progress),finish=E(.955,1.,progress);
+ vec3 touch=shot(a,q,0.,.36*push,vec2(.50,.45),vec2(-.026*push,.014*push));
+ vec3 macro=shot(b,q,1.,.32*(1.-pull),vec2(.69,.45),vec2(.012*pull,-.018*pull));
+ vec3 ritual=shot(c,q,2.,.14*(1.-finish),vec2(.69,.53),vec2(.018*(1.-finish),0.));
+ float m=motion>.5?radial(macroMix,q,vec2(.53,.45),.70):macroMix;
+ float n=motion>.5?radial(ritualMix,q,vec2(.69,.63),.80):ritualMix;
+ if(macroMix<=.0001)m=0.;if(macroMix>=.9999)m=1.;if(ritualMix<=.0001)n=0.;if(ritualMix>=.9999)n=1.;
+ gl_FragColor=vec4(mix(mix(touch,macro,m),ritual,n),1.);
+}`});
+const scene=new T.Scene();scene.add(new T.Mesh(new T.PlaneGeometry(2,2),mat));const camera=new T.Camera();function resize(){const rect=stage.getBoundingClientRect();r.setSize(Math.max(1,Math.round(rect.width)),Math.max(1,Math.round(rect.height)),false);}new ResizeObserver(resize).observe(stage);resize();let mx2=0,my2=0;const state={macro:0,ritual:0,progress:0};
+function draw(p,x,y,m,n,dt,reduceMotion){const a=1-Math.exp(-dt*7);mx2=mix(mx2,x,a);my2=mix(my2,y,a);u.progress.value=p;u.macroMix.value=m;u.ritualMix.value=n;u.mouse.value.set(mx2,my2);u.motion.value=reduceMotion?0:1;state.macro=m;state.ritual=n;state.progress=p;r.render(scene,camera);}
+draw(0,0,0,0,0,.016,true);window.attachDepth({draw,state,renderer:r});
+}catch(e){console.warn('Depth photography unavailable; retaining original photos',e);}
+</script></body></html>
