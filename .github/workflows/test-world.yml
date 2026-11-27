@@ -1,0 +1,96 @@
+name: Test V2 spatial world
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'world/**'
+      - 'assets/world-v20/manifest.json'
+      - '.github/workflows/test-world.yml'
+  workflow_run:
+    workflows: ["V2 spatial world production"]
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: world-browser-test
+  cancel-in-progress: true
+jobs:
+  browser:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          python3 - <<'PY'
+          import re,pathlib
+          s=pathlib.Path("world/index.html").read_text()
+          scripts=re.findall(r'<script(?: type="module")?>(.*?)</script>',s,re.S)
+          assert len(scripts)==2
+          for i,script in enumerate(scripts): pathlib.Path('/tmp/world-'+str(i)+'.mjs').write_text(script)
+          PY
+          node --check /tmp/world-0.mjs
+          node --check /tmp/world-1.mjs
+      - run: npm install --no-save --no-package-lock playwright@1.51.1 three@0.178.0
+      - run: npx playwright install --with-deps chromium
+      - name: Check real camera travel and uninterrupted geometry
+        run: |
+          python3 -m http.server 8765 >/tmp/oryzo-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          mkdir -p test-output
+          cat > smoke-world.mjs <<'JS'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+          const expectedBaked=await fs.access('assets/world-v20/manifest.json').then(()=>true,()=>false);
+          try{
+            for(const [name,viewport] of [['desktop',{width:1100,height:619}],['mobile',{width:390,height:844}]]){
+              const page=await browser.newPage({viewport,deviceScaleFactor:1,reducedMotion:'reduce'}),errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              const prefix='https://cdn.jsdelivr.net/npm/three@0.178.0/',root=path.resolve('node_modules/three');
+              await page.route(prefix+'**',async r=>{const f=path.resolve(root,new URL(r.request().url()).pathname.split('/three@0.178.0/')[1]);if(!f.startsWith(root+path.sep))return r.abort();await r.fulfill({body:await fs.readFile(f),contentType:'application/javascript'});});
+              await page.goto('http://127.0.0.1:8765/world/',{waitUntil:'domcontentloaded'});
+              await page.waitForFunction(()=>window.worldStudy&&worldStudy.progress>=0&&document.querySelector('#status').hidden,{},{timeout:120000});
+              const state=await page.evaluate(()=>({id:worldStudy.product.uuid,desk:worldStudy.desk.uuid,baked:worldStudy.baked,meshes:worldStudy.staticMeshes,bakedMeshes:worldStudy.bakedMeshes}));
+              if(state.baked!==expectedBaked||state.meshes<3||(expectedBaked&&state.bakedMeshes<3))throw Error('Scene missing real geometry: '+JSON.stringify(state));
+              const shot=async s=>page.screenshot({path:'test-output/'+name+'-'+s+'.png',timeout:90000});
+              const scroll=async p=>{await page.evaluate(p=>scrollTo(0,p*(document.documentElement.scrollHeight-innerHeight)),p);await page.waitForFunction(p=>Math.abs(worldStudy.progress-p)<.004,p,{timeout:90000});};
+              await shot('01-overhead');
+              const c=await page.evaluate(()=>worldStudy.camera.position.toArray());
+              await scroll(.30);await shot('02-low-angle');
+              const c2=await page.evaluate(()=>worldStudy.camera.position.toArray());
+              if(Math.hypot(...c.map((v,i)=>v-c2[i]))<10)throw Error('Camera failed to travel through scene');
+              await scroll(.68);await shot('03-lift');
+              if(!await page.evaluate(()=>worldStudy.pivot.position.y-worldStudy.base.y>6&&worldStudy.desk.visible))throw Error('Product lift or continuous desk failed');
+              if(name==='desktop'){
+                const before=await page.evaluate(()=>worldStudy.pivot.rotation.y);
+                await page.mouse.move(710,300);await page.mouse.down();await page.mouse.move(810,330,{steps:5});await page.mouse.up();
+                await page.waitForFunction(v=>Math.abs(worldStudy.pivot.rotation.y-v)>.15,before,{timeout:60000});
+              }
+              await scroll(.98);await shot('04-macro');
+              await scroll(0);
+              const after=await page.evaluate(()=>({id:worldStudy.product.uuid,desk:worldStudy.desk.uuid,lift:worldStudy.pivot.position.y-worldStudy.base.y,visible:worldStudy.desk.visible}));
+              if(after.id!==state.id||after.desk!==state.desk||Math.abs(after.lift)>.001||!after.visible)throw Error('Reverse scroll broke scene identity');
+              if(await page.locator('#world canvas').count()!==1)throw Error('Expected one WebGL renderer');
+              if(errors.length)throw Error(errors.join('\n'));
+              console.log(name,'PASS',JSON.stringify(state));
+              await page.close();
+            }
+          }finally{await browser.close()}
+          JS
+          node smoke-world.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: world-v20-browser-checkpoints
+          path: test-output/
+          if-no-files-found: warn
+          retention-days: 14
