@@ -23,13 +23,27 @@ for o in list(scene.objects):
 product=[o for o in scene.objects if o.type=="MESH" and o.name.startswith("Official Lusion coaster")]
 assert product
 for o in product:o.visible_camera=True
-# Strip color adjustment nodes on the product for glTF compatibility. Real texture retained;
-# the runtime color factor and lights are consistent throughout the shot.
-b=cork.node_tree.nodes.get("Principled BSDF")
-inp=b.inputs["Base Color"]
-if inp.is_linked and inp.links[0].from_node.bl_idname=="ShaderNodeHueSaturation":
-    adj=inp.links[0].from_node;source=adj.inputs["Color"].links[0].from_socket
-    cork.node_tree.links.remove(inp.links[0]);cork.node_tree.links.new(source,inp)
+# Calibrate material response from the actual V2.0 and Cycles review frames.
+# Existing wood roughness/normal response is too glossy and pink cork too pale.
+def tune(mat,rough,spec,normal):
+    n=mat.node_tree.nodes;links=mat.node_tree.links;bs=n.get("Principled BSDF")
+    for link in list(bs.inputs["Roughness"].links):links.remove(link)
+    bs.inputs["Roughness"].default_value=rough
+    bs.inputs["Specular IOR Level"].default_value=spec
+    for node in n:
+        if node.bl_idname=="ShaderNodeNormalMap":node.inputs["Strength"].default_value=normal
+        if node.bl_idname=="ShaderNodeBump":node.inputs["Strength"].default_value=min(normal,node.inputs["Strength"].default_value)
+tune(wood,.96,.19,.16);tune(cork,.94,.23,.24)
+for m,sat,val,hue in [(wood,.78,1.02,.515),(cork,1.35,.67,.545)]:
+    for n in m.node_tree.nodes:
+        if n.bl_idname=="ShaderNodeHueSaturation":
+            n.inputs["Saturation"].default_value=sat;n.inputs["Value"].default_value=val;n.inputs["Hue"].default_value=hue
+for light in scene.objects:
+    if light.type=="LIGHT" and light.name.startswith("Afternoon window"):
+        light.data.color=(1,.82,.61);light.data.energy=2600
+    elif light.type=="LIGHT" and light.name.startswith("Room bounce"):
+        light.data.energy=290
+scene.view_settings.exposure=.12
 # Render actual reference frames before baking; useful to compare with runtime.
 cam=scene.camera;scene.render.resolution_x=1100;scene.render.resolution_y=619;scene.cycles.samples=32
 for name,position,target in [
@@ -42,6 +56,11 @@ for name,position,target in [
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath="/tmp/world-v20-source.blend")
 # Hide moving product from static illumination. Live shadow is added in Three.js.
 for o in product:o.hide_render=True;o.hide_set(True)
+# Product texture stays directly exportable; use calibrated real-time color at runtime.
+bs=cork.node_tree.nodes.get("Principled BSDF");inp=bs.inputs["Base Color"]
+if inp.is_linked and inp.links[0].from_node.bl_idname=="ShaderNodeHueSaturation":
+    adj=inp.links[0].from_node;source=adj.inputs["Color"].links[0].from_socket
+    cork.node_tree.links.remove(inp.links[0]);cork.node_tree.links.new(source,inp)
 # Bake static geometry into three real mesh atlases (wood, cutting mat, props).
 # Explicitly bind original UV coordinates so creating bake UVs cannot change source maps.
 for m in list(bpy.data.materials):
@@ -98,12 +117,14 @@ def bake_group(objects,name,res):
     baked=material(name+"-Baked",(.8,.8,.8),1)
     nodes=baked.node_tree.nodes;links=baked.node_tree.links
     tex=nodes.new("ShaderNodeTexImage");tex.image=im
+    uvnode=nodes.new("ShaderNodeUVMap");uvnode.uv_map="BakeUV";links.new(uvnode.outputs["UV"],tex.inputs["Vector"])
     links.new(tex.outputs["Color"],nodes.get("Principled BSDF").inputs["Base Color"])
     o.data.materials.clear();o.data.materials.append(baked)
     for face in o.data.polygons:face.material_index=0
-    for layer in list(o.data.uv_layers):
-        if layer.name!="BakeUV":o.data.uv_layers.remove(layer)
-    o.data.uv_layers.active_index=0;o.data.uv_layers[0].active_render=True
+    # Blender 5 can expose internal UV selection attributes; never remove them.
+    # Explicit UVMap and active render layer preserve the correct glTF UV channel.
+    index=o.data.uv_layers.find("BakeUV");assert index>=0
+    o.data.uv_layers.active_index=index;o.data.uv_layers[index].active_render=True
     print("Baked",name,flush=True)
 # Bake all groups with original surrounding geometry present. The previously
 # baked materials are color-only when the next group is baked; indirect bounce
