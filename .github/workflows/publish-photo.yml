@@ -1,0 +1,50 @@
+name: Publish approved photographic visuals
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'photo/assets/**'
+      - '.github/workflows/publish-photo.yml'
+permissions:
+  contents: write
+concurrency:
+  group: photo-assets
+  cancel-in-progress: false
+jobs:
+  map-originals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Match original PNG files to chapters
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil, struct
+          root=Path("photo/assets")
+          expected={2665281:"01-workshop.png",1968632:"02-object.png",2215514:"03-touch.png",2039068:"04-material.png",1989872:"05-ritual.png"}
+          for src in list(root.glob("*")):
+              if not src.is_file() or src.stat().st_size not in expected:
+                  continue
+              with src.open("rb") as f:
+                  head=f.read(24)
+              if head[:8]!=b"\x89PNG\r\n\x1a\n" or head[12:16]!=b"IHDR":
+                  continue
+              w,h=struct.unpack(">II",head[16:24])
+              if not (w>1000 and h>500 and 1.7<w/h<1.9):
+                  continue
+              dest=root/expected[src.stat().st_size]
+              if not dest.exists():
+                  shutil.copyfile(src,dest)
+                  print("Matched",src.name,"to",dest.name)
+          missing=[name for name in expected.values() if not (root/name).is_file()]
+          print("Missing:",missing)
+          PY
+      - name: Commit mapped assets without overwriting existing files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add photo/assets/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Map approved photographs to chapters'
+          git pull --rebase origin main
+          git push origin HEAD:main
