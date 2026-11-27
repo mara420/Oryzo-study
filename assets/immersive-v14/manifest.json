@@ -1,0 +1,57 @@
+{
+  "workshop": {
+    "base": "workshop-base.webp",
+    "layers": [
+      {
+        "file": "workshop-cup.webp",
+        "name": "cup",
+        "depth": 1.5
+      },
+      {
+        "file": "workshop-pencil.webp",
+        "name": "pencil",
+        "depth": 2.0
+      },
+      {
+        "file": "workshop-ruler.webp",
+        "name": "ruler",
+        "depth": 1.5
+      },
+      {
+        "file": "workshop-clip.webp",
+        "name": "clip",
+        "depth": 1.4
+      }
+    ]
+  },
+  "touch": {
+    "base": "touch-base.webp",
+    "layers": [
+      {
+        "file": "touch-hand-and-coaster.webp",
+        "name": "hand-and-coaster",
+        "depth": 2.5
+      }
+    ]
+  },
+  "ritual": {
+    "base": "ritual-base.webp",
+    "layers": [
+      {
+        "file": "ritual-mug-and-coaster.webp",
+        "name": "mug-and-coaster",
+        "depth": 2.0
+      },
+      {
+        "file": "ritual-beans.webp",
+        "name": "beans",
+        "depth": 1.8
+      },
+      {
+        "file": "ritual-foliage.webp",
+        "name": "foliage",
+        "depth": 3.5
+      }
+    ]
+  }
+}
