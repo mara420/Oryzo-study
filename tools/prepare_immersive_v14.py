@@ -48,6 +48,9 @@ for name,(filename,definitions) in SCENES.items():
     for key,points,feather,depth in definitions:
         mask=Image.new("L",(W,H))
         ImageDraw.Draw(mask).polygon([(round(x*W),round(y*H)) for x,y in points],fill=255)
+        if key=="foliage":
+            # Keep the original baked chapter counter and progress bar stationary.
+            ImageDraw.Draw(mask).rectangle((0,round(.89*H),round(.245*W),round(.95*H)),fill=0)
         solid=np.asarray(mask)
         union=np.maximum(union,solid)
         soft=mask.filter(ImageFilter.GaussianBlur(feather))
