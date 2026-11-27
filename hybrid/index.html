@@ -59,6 +59,7 @@ Promise.all(images.map(ready)).catch(()=>{$('#fallback').hidden=false;$('#fallba
 window.hybrid={get scene(){return webgl},get progress(){return p},get chapter(){return current},get plateReady(){return plateReady},get heroReady(){return heroReady},get liveActive(){return live.classList.contains('active')},get photoOnly(){return photoEnabled},get dragX(){return dragX}};
 window.attachCoaster=api=>{webgl=api;mode.disabled=false;mode.textContent='LIVE 3D ON';};
 window.coasterFailed=()=>{mode.disabled=true;mode.textContent='PHOTO MODE';$('#fallback').hidden=false;};
+addEventListener('error',e=>{if(e.target?.tagName==='SCRIPT'&&!webgl)window.coasterFailed();},true);
 mode.onclick=()=>{photoEnabled=!photoEnabled;mode.textContent=photoEnabled?'LIVE 3D OFF':'LIVE 3D ON';mode.setAttribute('aria-pressed',String(!photoEnabled));};
 addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect();mx=clamp((e.clientX-r.left)/r.width-.5,-.5,.5);my=clamp((e.clientY-r.top)/r.height-.5,-.5,.5);if(drag){dragX=clamp(drag.x+(e.clientX-drag.sx)*.009,-1.1,1.1);dragY=clamp(drag.y+(e.clientY-drag.sy)*.009,-.8,.8)}});
 live.addEventListener('pointerdown',e=>{if(!live.classList.contains('active'))return;drag={sx:e.clientX,sy:e.clientY,x:dragX,y:dragY};live.setPointerCapture(e.pointerId);});
