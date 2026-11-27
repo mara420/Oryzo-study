@@ -1,0 +1,1 @@
+Cycles camera-matched static environment plates with baked product shadow but product hidden from primary rays. Product is separately rendered live in Three.js. CC0 textures: ambientCG Cork001 and Poly Haven wood_table_001 / studio_small_03. Lusion coaster OBJ: MIT. Original procedural props. Desktop 16:9; mobile 9:16; vertical FOV 35 degrees.
