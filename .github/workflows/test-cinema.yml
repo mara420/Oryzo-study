@@ -1,4 +1,4 @@
-name: Test V1.3 cinematic depth
+name: Test V1.3.1 cinematic compatibility
 on:
   workflow_dispatch:
   push:
@@ -75,6 +75,10 @@ jobs:
               if(await page.evaluate(()=>hybrid.scene.root.uuid)!==id)throw Error('Live product recreated on reverse scroll');
               await scroll(0);await page.waitForFunction(()=>hybrid.liveOpacity===0&&hybrid.frontOpacity===0,{},{timeout:60000});
               await scroll(.695);await page.waitForFunction(()=>hybrid.depthState?.macro>.1&&hybrid.depthState?.macro<.9,{},{timeout:60000});await shot('depth-transition');
+              if(await page.evaluate(()=>document.querySelectorAll('canvas').length)!==3)throw Error('Expected just two image canvases and one WebGL canvas');
+              await page.evaluate(()=>hybrid.scene.renderer.getContext().getExtension('WEBGL_lose_context')?.loseContext());
+              await page.waitForFunction(()=>!hybrid.scene&&!hybrid.liveActive&&hybrid.liveOpacity===0,{},{timeout:30000});
+              await scroll(.32);await shot('context-loss-fallback');
               if(errors.length)throw Error(errors.join('\n'));
               console.log(name,'PASS: continuous same-model interval, no blackout, reversible scrolling, all five visuals, drag and photo toggle');
               await page.close();
